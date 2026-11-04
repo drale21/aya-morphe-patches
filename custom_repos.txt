@@ -2,3 +2,5 @@
 # even if they're never found by the discovery scripts.
 # Lines starting with # are ignored.
 hxreborn/hxreborn-tiktok-patches
+https://gitlab.com/kmru/nai64patches
+https://gitlab=kmru/nai64extrapatches
