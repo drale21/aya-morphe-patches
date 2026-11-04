@@ -9,6 +9,7 @@ import java.util.List;
 
 import app.southstar21.extension.instagram.liquidglass.LiquidGlassNavBarPatch;
 import app.southstar21.extension.instagram.navbuttons.HideNavigationButtonsPatch;
+import app.southstar21.extension.instagram.profilepicture.ViewProfilePicturePatch;
 import app.southstar21.extension.instagram.reels.DisableReelsPatch;
 
 /** Registry and storage of every patch's settings. */
@@ -27,7 +28,8 @@ public final class Settings {
         return Arrays.asList(
                 LiquidGlassNavBarPatch.SETTINGS,
                 HideNavigationButtonsPatch.SETTINGS,
-                DisableReelsPatch.SETTINGS
+                DisableReelsPatch.SETTINGS,
+                ViewProfilePicturePatch.SETTINGS
         );
     }
 

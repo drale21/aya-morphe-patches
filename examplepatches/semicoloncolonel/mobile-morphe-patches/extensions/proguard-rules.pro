@@ -116,6 +116,7 @@
 -keep class semicoloncolonel.mobilestream.extension.whitehouse.FeedFilter { *; }
 -keep class semicoloncolonel.mobilestream.extension.shared.privacy.ProxyRouter { *; }
 -keep class semicoloncolonel.mobilestream.extension.whitehouse.PromoHider { *; }
+-keep class semicoloncolonel.mobilestream.extension.yttv.MembershipUpsellFilter { public static *; }
 -keep class semicoloncolonel.mobilestream.extension.recgov.HiddenDetails { public static *; }
 
 # YouTube TV — "Skip ads". onCuePointProvider() is called only from injected

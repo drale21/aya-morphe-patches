@@ -18,9 +18,9 @@ Patched apps are signed with a different key, so the store version has to be uni
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.6.2](https://github.com/southstar21dev/southstar21-patches/releases/tag/v1.6.2)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;5 patches total
+> **[v1.8.2](https://github.com/southstar21dev/southstar21-patches/releases/tag/v1.8.2)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
 <details open>
-<summary>📦 Instagram&nbsp;&nbsp;•&nbsp;&nbsp;5 patches</summary>
+<summary>📦 Instagram&nbsp;&nbsp;•&nbsp;&nbsp;6 patches</summary>
 <br>
 
 **🎯 Supported versions:**
@@ -35,6 +35,7 @@ Patched apps are signed with a different key, so the store version has to be uni
 | [Hide navigation buttons](#hide-navigation-buttons) | Adds settings to hide Search, Reels, Create, Messages and other tabs from the bottom bar. |  |
 | [Liquid Glass navigation bar](#liquid-glass-navigation-bar) | Turns the bottom tab bar into a floating iOS 26 style Liquid Glass pill with live background blur and edge refraction. Refraction needs Android 13+, blur needs Android 12+, older versions get a tinted pill. | • Blur radius<br>• Refraction strength<br>• Extend content behind bar |
 | [Remove build expired popup](#remove-build-expired-popup) | Removes the popup that appears after a while, when the app version ages. |  |
+| [View profile picture](#view-profile-picture) | Adds a button on the profile picture of profile pages that shows the profile picture in full resolution and saves it to the gallery. |  |
 
 </details>
 
@@ -82,6 +83,14 @@ Each part can be switched off on the patch's **Disable Reels** page. The Reels t
 | Block Reels player | off | Reels don't open at all, including ones sent in messages. |
 
 How it works: Instagram parses every home feed item, and every Explore section, through one method each; the patch returns nothing for reels there, which Instagram already skips. The Reels player's pager is found by its view id (`clips_viewer_view_pager`), and the player itself is closed from `ClipsViewerFragment.onViewCreated` when blocked.
+
+### View profile picture
+
+Adds a small round button to the bottom left of the profile picture on every profile page (your own too; the story "+" stays bottom right) that opens the profile picture fullscreen in its original resolution: the avatar grows from where it sits into the full picture and shrinks back when closed. Pinch or double tap to zoom, swipe down or press back to close, tap to hide the controls, and tap the download button to save it to **Pictures/Instagram**. The file is saved exactly as Instagram serves it, without re-compressing.
+
+The small picture shows straight away and the full size one replaces it once it's downloaded; the resolution is shown at the bottom.
+
+How it works: profile pages (`UserDetailFragment`) are tracked from `onViewCreated`, and the button is laid over the avatar's frame (`row_profile_header_imageview_frame_layout`) whenever the profile header is built. On tap, the user is read live from the page's `UserDetailTabController`, which carries the full size picture (`hd_profile_pic_url_info`) once the profile has loaded.
 
 ## Repository layout
 

@@ -1,3 +1,10 @@
+## [1.0.7](https://github.com/semicoloncolonel/mobile-morphe-patches/compare/v1.0.6...v1.0.7) (2026-11-04)
+
+
+### Features
+
+* hide YouTube TV's membership upsell and show Recreation.gov lottery counts in a dialog ([61d64e4](https://github.com/semicoloncolonel/mobile-morphe-patches/commit/61d64e4739af6a8420a31b0b0ba3f546b2df7304))
+
 ## [1.0.6](https://github.com/semicoloncolonel/mobile-morphe-patches/compare/v1.0.5...v1.0.6) (2026-11-03)
 
 

@@ -30,6 +30,8 @@ public final class Icons {
         TABS,
         /** A play button crossed out, for removing Reels. */
         NO_REELS,
+        /** A portrait in a frame, for profile pictures. */
+        PICTURE,
     }
 
     /** A white glyph on a rounded square filled with a soft gradient of {@code color}. */
@@ -148,6 +150,17 @@ public final class Icons {
                     path.close();
                     canvas.drawPath(path, solid);
                     canvas.drawLine(s * 0.2f, s * 0.8f, s * 0.8f, s * 0.2f, stroke);
+                    break;
+                }
+                case PICTURE: {
+                    rect.set(s * 0.24f, s * 0.24f, s * 0.76f, s * 0.76f);
+                    canvas.drawRoundRect(rect, s * 0.12f, s * 0.12f, stroke);
+                    canvas.drawCircle(s * 0.5f, s * 0.43f, s * 0.08f, solid);
+                    path.reset();
+                    path.moveTo(s * 0.34f, s * 0.68f);
+                    path.cubicTo(s * 0.36f, s * 0.57f, s * 0.64f, s * 0.57f, s * 0.66f, s * 0.68f);
+                    path.close();
+                    canvas.drawPath(path, solid);
                     break;
                 }
                 case PATCH:

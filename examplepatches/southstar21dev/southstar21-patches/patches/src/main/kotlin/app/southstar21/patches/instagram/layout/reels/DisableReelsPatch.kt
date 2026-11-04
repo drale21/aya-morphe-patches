@@ -2,35 +2,14 @@ package app.southstar21.patches.instagram.layout.reels
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.southstar21.patches.instagram.misc.extension.callThrough
+import app.southstar21.patches.instagram.misc.extension.extensionStub
 import app.southstar21.patches.instagram.misc.extension.hookReturnedObjects
 import app.southstar21.patches.instagram.misc.extension.markPatchIncluded
 import app.southstar21.patches.instagram.misc.extension.sharedExtensionPatch
 import app.southstar21.patches.instagram.shared.Constants.COMPATIBILITY_INSTAGRAM
-import com.android.tools.smali.dexlib2.iface.Method
 
-/** Overwrites an extension stub `(Object)Object` to call [target] on its argument. */
-private fun MutableMethod.callThrough(target: Method) {
-    val isStatic = com.android.tools.smali.dexlib2.AccessFlags.STATIC.isSet(target.accessFlags)
-    val invoke = if (isStatic) "invoke-static" else "invoke-virtual"
-    val argumentType = if (isStatic) target.parameterTypes.first().toString() else target.definingClass
-    addInstructions(
-        0,
-        """
-            check-cast p0, $argumentType
-            $invoke { p0 }, $target
-            move-result-object v0
-            return-object v0
-        """
-    )
-}
-
-private fun stub(name: String) = app.morphe.patcher.Fingerprint(
-    definingClass = EXTENSION_CLASS,
-    name = name,
-    returnType = "Ljava/lang/Object;",
-    parameters = listOf("Ljava/lang/Object;"),
-)
+private fun stub(name: String) = extensionStub(EXTENSION_CLASS, name)
 
 @Suppress("unused")
 val disableReelsPatch = bytecodePatch(

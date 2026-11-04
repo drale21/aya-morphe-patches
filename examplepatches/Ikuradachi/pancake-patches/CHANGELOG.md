@@ -1,3 +1,17 @@
+## [1.3.0](https://github.com/Ikuradachi/pancake-patches/compare/v1.2.0...v1.3.0) (2026-11-04)
+
+### ✨ New Features
+
+* crunchyroll - disable telemetry (not guaranteed) ([94b9106](https://github.com/Ikuradachi/pancake-patches/commit/94b9106025000a365ddf84d349a1583293517793))
+* crunchyroll - proxy token request (geo bypass) ([054264b](https://github.com/Ikuradachi/pancake-patches/commit/054264bc395eaaa0f06b29fd7d4314f53a0e36a9))
+
+## [1.3.0-dev.1](https://github.com/Ikuradachi/pancake-patches/compare/v1.2.0...v1.3.0-dev.1) (2026-11-04)
+
+### ✨ New Features
+
+* crunchyroll - disable telemetry (not guaranteed) ([94b9106](https://github.com/Ikuradachi/pancake-patches/commit/94b9106025000a365ddf84d349a1583293517793))
+* crunchyroll - proxy token request (geo bypass) ([054264b](https://github.com/Ikuradachi/pancake-patches/commit/054264bc395eaaa0f06b29fd7d4314f53a0e36a9))
+
 ## [1.2.0](https://github.com/Ikuradachi/pancake-patches/compare/v1.1.0...v1.2.0) (2026-10-24)
 
 ### ✨ New Features

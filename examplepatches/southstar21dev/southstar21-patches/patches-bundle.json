@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-04T00:52:10",
-  "description": "## [1.6.2](https://github.com/southstar21dev/southstar21-patches/compare/v1.6.1...v1.6.2) (2026-11-04)\n\n### 🐛 Bug Fixes\n\n* Stop the navigation bar selection pill jumping when tapping quickly between tabs ([bdebdf6](https://github.com/southstar21dev/southstar21-patches/commit/bdebdf67329f4c063a07c73c2505dbe2e95fad83))",
-  "download_url": "https://github.com/southstar21dev/southstar21-patches/releases/download/v1.6.2/patches-1.6.2.mpp",
+  "created_at": "2026-11-04T19:18:43",
+  "description": "## [1.8.2](https://github.com/southstar21dev/southstar21-patches/compare/v1.8.1...v1.8.2) (2026-11-04)\n\n### 🐛 Bug Fixes\n\n* Move the profile picture button onto the profile picture itself ([cad2fe0](https://github.com/southstar21dev/southstar21-patches/commit/cad2fe035f1dc9632c07f4c2f5880087c3617a89))",
+  "download_url": "https://github.com/southstar21dev/southstar21-patches/releases/download/v1.8.2/patches-1.8.2.mpp",
   "signature_download_url": "",
-  "version": "1.6.2"
+  "version": "1.8.2"
 }

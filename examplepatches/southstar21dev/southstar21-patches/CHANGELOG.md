@@ -1,3 +1,31 @@
+## [1.8.2](https://github.com/southstar21dev/southstar21-patches/compare/v1.8.1...v1.8.2) (2026-11-04)
+
+### 🐛 Bug Fixes
+
+* Move the profile picture button onto the profile picture itself ([cad2fe0](https://github.com/southstar21dev/southstar21-patches/commit/cad2fe035f1dc9632c07f4c2f5880087c3617a89))
+
+## [1.8.1](https://github.com/southstar21dev/southstar21-patches/compare/v1.8.0...v1.8.1) (2026-11-04)
+
+### 🐛 Bug Fixes
+
+* Open the full size profile picture from a button in the profile page's top bar instead of a long press ([d3b1bb6](https://github.com/southstar21dev/southstar21-patches/commit/d3b1bb6f98c344b94752a61507bddf58f05eb46a))
+
+## [1.8.0](https://github.com/southstar21dev/southstar21-patches/compare/v1.7.0...v1.8.0) (2026-11-04)
+
+### 🐛 Bug Fixes
+
+* Make the profile picture long press always register and keep the viewer's controls clear of the status bar ([2676766](https://github.com/southstar21dev/southstar21-patches/commit/26767668d5c593298495136cd489b1b86f2c26e7))
+
+### ✨ New Features
+
+* Animate the profile picture viewer open and closed, add swipe down to close and show the southstar21.dev logo in the settings menu ([c8fd506](https://github.com/southstar21dev/southstar21-patches/commit/c8fd506d64cca5200887ab3cd1b1dceada486ef2))
+
+## [1.7.0](https://github.com/southstar21dev/southstar21-patches/compare/v1.6.2...v1.7.0) (2026-11-04)
+
+### ✨ New Features
+
+* Add View profile picture patch ([235452d](https://github.com/southstar21dev/southstar21-patches/commit/235452d40982a829137155d2d23929270fa6e4de))
+
 ## [1.6.2](https://github.com/southstar21dev/southstar21-patches/compare/v1.6.1...v1.6.2) (2026-11-04)
 
 ### 🐛 Bug Fixes

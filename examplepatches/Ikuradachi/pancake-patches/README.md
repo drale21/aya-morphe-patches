@@ -13,7 +13,7 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.2.0](https://github.com/Ikuradachi/pancake-patches/releases/tag/v1.2.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;19 patches total
+> **[v1.3.0](https://github.com/Ikuradachi/pancake-patches/releases/tag/v1.3.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;25 patches total
 <details open>
 <summary>📦 Bstation&nbsp;&nbsp;•&nbsp;&nbsp;15 patches</summary>
 <br>
@@ -40,6 +40,26 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 | [Hide home search bar](#hide-home-search-bar) | Hides the search bar on the Home screen. | • Hide home search bar |
 | [Hide home tab bar items](#hide-home-tab-bar-items) | Hide selected horizontal tab bar items on the home screen (Featured, Plaza, Subscriptions, Anime, Shorts, Community, Campaigns). | • Hide Featured tab<br>• Hide Plaza tab<br>• Hide Campaign and Activity tabs<br>• Hide Subscriptions tab<br>• Hide Anime tab<br>• Hide Shorts tab<br>• Hide Community (Opus) tab |
 | [Pure discover search bar](#pure-discover-search-bar) | Removes discover tabs and trending searches to make the Discover page a pure search bar. | • Hide discover tabs<br>• Hide trending searches |
+
+</details>
+
+<details open>
+<summary>📦 Crunchyroll&nbsp;&nbsp;•&nbsp;&nbsp;6 patches</summary>
+<br>
+
+**🎯 Supported versions:**
+
+| 3.127.0 |
+| :---: |
+
+| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
+|----------|----------------|-----------|
+| [Disable Datadog telemetry setup](#disable-datadog-telemetry-setup) | Selects the app's disabled Datadog implementation, preserving shared initialization and consent observers. |  |
+| [Disable Firebase analytics after consent initialization](#disable-firebase-analytics-after-consent-initialization) | Keeps Firebase Analytics collection disabled when consent updates arrive. Collection before the first update remains possible. |  |
+| [Disable Mux playback analytics events](#disable-mux-playback-analytics-events) | Drops Mux playback analytics events while retaining player and ad initialization. Local SDK metadata remains. |  |
+| [Disable Segment analytics events](#disable-segment-analytics-events) | Blocks new Segment events, identification and screen payloads. SDK initialization and previously queued events remain. |  |
+| [Disable automatic Crashlytics uploads](#disable-automatic-crashlytics-uploads) | Denies automatic crash report uploads. Local crash recording and explicit report submission remain available. |  |
+| [Proxy token requests](#proxy-token-requests) | Routes token acquisition and refresh through your SOCKS proxy, with optional proxy authentication. | • SOCKS proxy host<br>• SOCKS proxy port<br>• SOCKS proxy username<br>• SOCKS proxy password<br>• Local token diagnostics |
 
 </details>
 

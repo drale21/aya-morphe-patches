@@ -43,7 +43,7 @@ YouTube TV and Moviebase sign in with Google through MicroG RE, so install it fi
 | Prime Video | Skip ads, Rename shared permissions, Disable AI¹ ², Block analytics & tracking¹ ² | `3.0.477.1447` | 11/01/26 |
 | Starz | Skip launch video, Skip pre-roll promo¹, Remove social sign-in, Block analytics & tracking¹ ² | `6.11.0` | 10/31/26 |
 | Tubi | Skip ads, Remove social sign-in, Hide sign-in prompts, Block analytics & tracking¹ ² | `10.43.1` | 10/30/26 |
-| YouTube TV | GmsCore support, Skip ads¹, Change app name, Block telemetry², Hide prompts and promos² | `10.44.0` | 11/02/26 |
+| YouTube TV | GmsCore support, Skip ads¹, Change app name, Block telemetry², Hide prompts and promos², Hide membership upsell² | `10.44.0` | 11/04/26 |
 
 ### News
 
@@ -68,7 +68,7 @@ YouTube TV and Moviebase sign in with Google through MicroG RE, so install it fi
 | MyTSA | Block analytics & tracking² | `5.1.0` | 11/02/26 |
 | National Forests & Grasslands | Disable Pairip license check, Block analytics & tracking² | `1.3.0` | 11/02/26 |
 | NPS | Block analytics & tracking², Block Bluetooth scanning² | `2.15.0` | 11/02/26 |
-| Recreation.gov | Skip location on open, Hide rating prompt, Block analytics & tracking², Show hidden details² | `2.2.67` | 11/02/26 |
+| Recreation.gov | Skip location on open, Hide rating prompt, Block analytics & tracking², Show hidden details² | `2.2.67` | 11/04/26 |
 | White House | Disable Pairip license check, Remove microphone access, Hide social feeds², Hide promotions², Block analytics & tracking², Route traffic through a proxy² | `47.7.8` | 11/02/26 |
 
 ### Shopping
@@ -147,6 +147,7 @@ Everything runs on the phone, inside the patched app. The patches do not send da
 | Hide marketing pop-ups | The Washington Post, The Wall Street Journal | In-app marketing messages, such as subscription offers, and the subscribe banner on The Washington Post's home page. |
 | Hide pop-ups and rating prompts | Fox Local | The rate-the-app prompt, the rating card in the feeds, and marketing pop-ups. |
 | Hide prompts and promos | YouTube TV | The rate-the-app dialog, promo banners, the app tour, the highlights autoplay prompt, and the "Watch on YouTube" dialog. The last three are hidden only on a fresh install or after you clear the app's data. |
+| Hide membership upsell | YouTube TV | The "Add to membership" shelf on the home screen, which promotes paid add-on networks. The shelf is removed from the feed, so no empty space is left behind. |
 | Hide surveys | CBS News | Qualtrics surveys and the rate-the-app prompt they can lead to. |
 | Hide surveys and rating prompt | NBC News | Iterate surveys and the rate-the-app prompt. |
 | Hide rating prompt | Recreation.gov | The rate-the-app prompt after checkout. |
@@ -285,7 +286,7 @@ These are off by default and shared across apps:
 
 **Save content for offline use** (FEMA) keeps the Prepare guides, disaster declarations, FAQ, and the images you have viewed readable without a connection. Long-press the app icon for **Save all**, which downloads every guide in English and Spanish (about 150 MB), or **Refresh**, which updates the saved pages. Saved content is replaced only after the new copy downloads completely.
 
-**Show hidden details** (Recreation.gov) shows details the app receives but does not display: lottery application and award counts, the per-account limit, and result dates, when each ticket time slot stops selling, booking window rules, the deadline to confirm a lottery win, and when venue booking opens or closes.
+**Show hidden details** (Recreation.gov) shows details the app receives but does not display: the ticket-lottery application and award counts and the per-account limit (in a dialog you dismiss, since that screen has no text to add them to), when each ticket time slot stops selling, booking window rules, the deadline to confirm a lottery win, and when venue booking opens or closes. The lottery's results date is left out because the app already shows it.
 
 **Enable developer menu** (Fox News) opens the hidden developer menu with a long-press on the Fox logo at the bottom of Settings. Some of its settings point the app at test servers.
 
