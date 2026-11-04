@@ -13,8 +13,10 @@ import android.graphics.Path;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,9 +33,8 @@ import app.southstar21.extension.instagram.settings.Setting;
  * opens {@link ProfilePictureViewer} with the picture in full size.
  * <ul>
  *   <li>Profile pages (UserDetailFragment) are tracked from their onViewCreated.</li>
- *   <li>The button is laid over the bottom left of the avatar's frame (the story "+" on your
- *       own profile sits bottom right). The main activity's watch loop adds it whenever the
- *       profile header is (re)built.</li>
+ *   <li>The button floats over the bottom left of the avatar's story ring (the story "+" on
+ *       your own profile sits bottom right), added whenever the page's header is laid out.</li>
  *   <li>On tap, the user is read live from the page's UserDetailTabController, falling back
  *       to the one the page last loaded from the network.</li>
  * </ul>
@@ -63,6 +64,7 @@ public final class ViewProfilePicturePatch {
     private static boolean fieldsResolved;
 
     private static int frameId = -1;
+    private static int ringId;
     private static int titleId;
     private static int avatarId;
 
@@ -90,11 +92,39 @@ public final class ViewProfilePicturePatch {
 
     // region Hooks
 
-    /** Called from UserDetailFragment.onViewCreated. */
-    public static void onProfileCreated(Object fragment) {
+    /**
+     * Called from UserDetailFragment.onViewCreated. The page's own view tree is watched, so
+     * the button shows whichever activity the profile opens in (the main one, or the modal
+     * one used for profiles opened from DMs, notifications, ...).
+     */
+    public static void onProfileCreated(Object fragment, View page) {
         if (fragment == null) return;
         synchronized (profiles) {
             if (!profiles.containsKey(fragment)) profiles.put(fragment, null);
+        }
+        try {
+            if (page == null || !SETTINGS.isActive()) return;
+            ViewTreeObserver.OnGlobalLayoutListener onLayout = () -> {
+                try {
+                    install(fragment, page);
+                } catch (Throwable t) {
+                    Log.e(TAG, "Failed to add button", t);
+                }
+            };
+            page.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                @Override
+                public void onViewAttachedToWindow(View v) {
+                    v.getViewTreeObserver().addOnGlobalLayoutListener(onLayout);
+                }
+
+                @Override
+                public void onViewDetachedFromWindow(View v) {
+                    v.getViewTreeObserver().removeOnGlobalLayoutListener(onLayout);
+                }
+            });
+            if (page.isAttachedToWindow()) page.getViewTreeObserver().addOnGlobalLayoutListener(onLayout);
+        } catch (Throwable t) {
+            Log.e(TAG, "Failed to watch profile", t);
         }
     }
 
@@ -106,19 +136,6 @@ public final class ViewProfilePicturePatch {
         }
     }
 
-    /** Called regularly while the main activity draws, in case the profile header was rebuilt. */
-    public static void ensureInstalled() {
-        try {
-            if (!SETTINGS.isActive()) return;
-            for (Object fragment : fragments()) {
-                View page = viewOf(fragment);
-                if (page != null && page.isAttachedToWindow()) install(fragment, page);
-            }
-        } catch (Throwable t) {
-            Log.e(TAG, "Failed to check profiles", t);
-        }
-    }
-
     // endregion
 
     // region Button
@@ -126,24 +143,58 @@ public final class ViewProfilePicturePatch {
     private static void install(Object fragment, View page) {
         resolveIds(page.getResources());
         if (frameId == 0) return;
-        View found = page.findViewById(frameId);
-        if (!(found instanceof FrameLayout)) return;
-        FrameLayout frame = (FrameLayout) found;
-        for (int i = 0; i < frame.getChildCount(); i++) {
-            if (frame.getChildAt(i) instanceof PictureButton) return;
+        View frame = page.findViewById(frameId);
+        if (frame == null) return;
+        View ring = ringId == 0 ? null : page.findViewById(ringId);
+        ViewGroup host = hostFor(frame, ring);
+        if (host == null) return;
+        for (int i = 0; i < host.getChildCount(); i++) {
+            if (host.getChildAt(i) instanceof PictureButton) return;
         }
         float density = page.getResources().getDisplayMetrics().density;
         int size = Math.round(26 * density);
-        PictureButton button = new PictureButton(page.getContext());
+        PictureButton button = new PictureButton(page.getContext(), frame, ring);
         button.setOnClickListener(v -> open(v, fragment));
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size, Gravity.BOTTOM | Gravity.START);
-        frame.addView(button, params);
-        button.setElevation(2 * density);
+        // Added last with elevation, so it's drawn over the avatar and its story ring.
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size, Gravity.TOP | Gravity.START);
+        host.addView(button, params);
+        button.setElevation(4 * density);
+        button.setTranslationZ(4 * density);
+    }
+
+    /**
+     * The view the button goes in: the closest parent of both the avatar and its story ring
+     * (the ring is a separate view on top of the avatar), skipping layouts that would line
+     * it up with their other children instead of letting it float.
+     */
+    private static ViewGroup hostFor(View frame, View ring) {
+        ViewGroup host = frame.getParent() instanceof ViewGroup ? (ViewGroup) frame.getParent() : null;
+        if (ring != null && ring.isAttachedToWindow()) {
+            while (host != null && !contains(host, ring)) {
+                host = host.getParent() instanceof ViewGroup ? (ViewGroup) host.getParent() : null;
+            }
+        }
+        while (host instanceof LinearLayout) {
+            host = host.getParent() instanceof ViewGroup ? (ViewGroup) host.getParent() : null;
+        }
+        if (host == null) return null;
+        String name = host.getClass().getName();
+        // Lists and scroll views position their children themselves.
+        if (name.contains("RecyclerView") || name.contains("ScrollView") || name.contains("ListView")) return null;
+        return host;
+    }
+
+    private static boolean contains(View ancestor, View view) {
+        for (Object v = view; v instanceof View; v = ((View) v).getParent()) {
+            if (v == ancestor) return true;
+        }
+        return false;
     }
 
     private static void resolveIds(Resources res) {
         if (frameId != -1) return;
         frameId = res.getIdentifier("row_profile_header_imageview_frame_layout", "id", PACKAGE);
+        ringId = res.getIdentifier("reel_ring", "id", PACKAGE);
         titleId = res.getIdentifier("action_bar_title", "id", PACKAGE);
         avatarId = res.getIdentifier("row_profile_header_imageview", "id", PACKAGE);
     }
@@ -278,18 +329,27 @@ public final class ViewProfilePicturePatch {
     @SuppressLint("ViewConstructor")
     private static final class PictureButton extends View {
         private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint ring = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint outline = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint glyph = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Path path = new Path();
         private final float density;
+        private final View frame;
+        private final View ring;
+        private final int[] location = new int[2];
+        private final ViewTreeObserver.OnPreDrawListener follow = () -> {
+            follow();
+            return true;
+        };
 
-        PictureButton(Context context) {
+        PictureButton(Context context, View frame, View ring) {
             super(context);
+            this.frame = frame;
+            this.ring = ring;
             density = context.getResources().getDisplayMetrics().density;
             boolean dark = (context.getResources().getConfiguration().uiMode
                     & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
             fill.setColor(dark ? 0xFF363636 : 0xFFEFEFEF);
-            ring.setColor(dark ? Color.BLACK : Color.WHITE);
+            outline.setColor(dark ? Color.BLACK : Color.WHITE);
             glyph.setColor(dark ? Color.WHITE : Color.BLACK);
             glyph.setStyle(Paint.Style.STROKE);
             glyph.setStrokeWidth(1.75f * density);
@@ -299,6 +359,44 @@ public final class ViewProfilePicturePatch {
             setClickable(true);
             setFocusable(true);
             setOutlineProvider(android.view.ViewOutlineProvider.BACKGROUND);
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            getViewTreeObserver().addOnPreDrawListener(follow);
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            getViewTreeObserver().removeOnPreDrawListener(follow);
+            super.onDetachedFromWindow();
+        }
+
+        /**
+         * Sits on the bottom left of the story ring (or of the avatar when there's no ring),
+         * mirroring the story "+" at the bottom right, and hides with the avatar.
+         */
+        private void follow() {
+            View anchor = ring != null && ring.isShown() && ring.getWidth() > 0 ? ring : frame;
+            boolean shown = frame.isShown() && frame.getWidth() > 0 && anchor.isAttachedToWindow();
+            int visibility = shown ? VISIBLE : INVISIBLE;
+            if (getVisibility() != visibility) setVisibility(visibility);
+            if (!shown || !(getParent() instanceof View)) return;
+
+            View host = (View) getParent();
+            anchor.getLocationInWindow(location);
+            float ax = location[0], ay = location[1];
+            host.getLocationInWindow(location);
+            float r = Math.min(anchor.getWidth(), anchor.getHeight()) / 2f;
+            float cx = ax - location[0] + anchor.getWidth() / 2f - r * 0.7071f;
+            float cy = ay - location[1] + anchor.getHeight() / 2f + r * 0.7071f;
+            float tx = cx - getWidth() / 2f - getLeft() + host.getScrollX();
+            float ty = cy - getHeight() / 2f - getTop() + host.getScrollY();
+            if (getTranslationX() != tx) setTranslationX(tx);
+            if (getTranslationY() != ty) setTranslationY(ty);
+            float alpha = frame.getAlpha();
+            if (getAlpha() != alpha) setAlpha(alpha);
         }
 
         @Override
@@ -320,7 +418,7 @@ public final class ViewProfilePicturePatch {
         protected void onDraw(Canvas canvas) {
             float w = getWidth(), h = getHeight();
             float cx = w / 2f, cy = h / 2f, r = Math.min(w, h) / 2f;
-            canvas.drawCircle(cx, cy, r, ring);
+            canvas.drawCircle(cx, cy, r, outline);
             canvas.drawCircle(cx, cy, r - 2 * density, fill);
             // Four corner brackets (fullscreen).
             float half = 5.5f * density, arm = 3f * density;

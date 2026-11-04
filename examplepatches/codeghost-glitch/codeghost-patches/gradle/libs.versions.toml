@@ -1,0 +1,11 @@
+[versions]
+morphe-patcher = "1.15.1"
+#noinspection GradleDependency
+smali = "d92701d947"
+kotlinx-coroutines = "1.10.2"
+
+[libraries]
+# Gradle plugin adds the dependency during build, this declaration is here only for dependabot to provide updates.
+#noinspection UnusedVersionCatalogEntry
+morphe-patcher = { module = "app.morphe:morphe-patcher", version.ref = "morphe-patcher" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }

@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-04T19:18:43",
-  "description": "## [1.8.2](https://github.com/southstar21dev/southstar21-patches/compare/v1.8.1...v1.8.2) (2026-11-04)\n\n### 🐛 Bug Fixes\n\n* Move the profile picture button onto the profile picture itself ([cad2fe0](https://github.com/southstar21dev/southstar21-patches/commit/cad2fe035f1dc9632c07f4c2f5880087c3617a89))",
-  "download_url": "https://github.com/southstar21dev/southstar21-patches/releases/download/v1.8.2/patches-1.8.2.mpp",
+  "created_at": "2026-11-04T20:45:18",
+  "description": "## 1.0.0 (2026-11-04)\n\n### ✨ New Features\n\n* southstar21 Patches for Instagram ([8cc3fc7](https://github.com/southstar21dev/southstar21-patches/commit/8cc3fc728bb2a19458faec2be9f79ea4f697f89c))",
+  "download_url": "https://github.com/southstar21dev/southstar21-patches/releases/download/v1.0.0/patches-1.0.0.mpp",
   "signature_download_url": "",
-  "version": "1.8.2"
+  "version": "1.0.0"
 }

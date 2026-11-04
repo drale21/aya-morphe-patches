@@ -30,7 +30,8 @@ val viewProfilePicturePatch = bytecodePatch(
 
         UserDetailFragmentOnViewCreatedFingerprint.method.addInstruction(
             0,
-            "invoke-static/range { p0 .. p0 }, $EXTENSION_CLASS->onProfileCreated(Ljava/lang/Object;)V"
+            "invoke-static/range { p0 .. p1 }, " +
+                    "$EXTENSION_CLASS->onProfileCreated(Ljava/lang/Object;Landroid/view/View;)V"
         )
         OnUserUpdatedFromNetworkFingerprint.method.addInstruction(
             0,

@@ -9,7 +9,6 @@ import android.view.ViewTreeObserver;
 import java.util.WeakHashMap;
 
 import app.southstar21.extension.instagram.liquidglass.LiquidGlassNavBarPatch;
-import app.southstar21.extension.instagram.profilepicture.ViewProfilePicturePatch;
 import app.southstar21.extension.instagram.settings.ProfileSettingsButton;
 import app.southstar21.extension.instagram.settings.Settings;
 
@@ -74,8 +73,6 @@ public final class InstagramHooks {
                     decor.getViewTreeObserver().removeOnPreDrawListener(this);
                     Log.e(TAG, "Profile button failed", t);
                 }
-                // Catches its own errors; does nothing unless the patch was included.
-                ViewProfilePicturePatch.ensureInstalled();
             }
         });
     }
