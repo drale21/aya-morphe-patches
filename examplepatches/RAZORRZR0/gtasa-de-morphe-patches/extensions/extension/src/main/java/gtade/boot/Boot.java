@@ -8,9 +8,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,11 +21,14 @@ import java.util.List;
  * GameActivity's static init calls start() right after loadLibrary("UE4") (Mod loader patch).
  * The mod patches put their files in assets/gtade/{mods,configs,cleo}/. After each (re)patch this copies them to
  * Android/data/<game>/{mods,configs,cleo}, where AML and CLEO load them, then loads AML. An existing .ini is kept: it holds
- * the user's settings. Mod libraries from an earlier patch that are no longer included are deleted.
+ * the user's settings; only [sections] it lacks are appended from the new one. With the Rubbish-DE patch it also builds
+ * that mod's model pak into paks/ from the game's own data (RubbishPak). Mod libraries and paks from an earlier patch
+ * that are no longer included are deleted.
  */
 public final class Boot {
     private static final String TAG = "GTADEBoot";
     private static final String STATE = "mods/.gtade_patched";  // line 1: APK update time; then installed mod paths
+    private static final String RUBBISH_PAK = "904-Rubbish-DE_P.pak";
 
     public static void start() {
         try {
@@ -56,7 +62,10 @@ public final class Boot {
                 String path = dir + "/" + n;
                 File dst = new File(root, path);
                 if (dir.equals("mods")) now.add(path);
-                if (n.endsWith(".ini") && dst.exists()) continue;
+                if (n.endsWith(".ini") && dst.exists()) {
+                    appendNewSections(assets, "gtade/" + path, dst);
+                    continue;
+                }
                 dst.getParentFile().mkdirs();
                 File tmp = new File(dst.getPath() + ".tmp");
                 try (InputStream in = assets.open("gtade/" + path); OutputStream out = new FileOutputStream(tmp)) {
@@ -67,6 +76,23 @@ public final class Boot {
                 Log.i(TAG, "installed " + path);
             }
         }
+        String rubbishSlots = readAsset(assets, "gtade/rubbish/slots.json");
+        if (rubbishSlots != null) {  // Rubbish-DE patch: its model pak is built from this device's game data
+            String path = "paks/" + RUBBISH_PAK;
+            try {
+                List<String> apks = new ArrayList<>();
+                apks.add(app.getApplicationInfo().sourceDir);
+                if (app.getApplicationInfo().splitSourceDirs != null)
+                    apks.addAll(java.util.Arrays.asList(app.getApplicationInfo().splitSourceDirs));
+                File dst = new File(root, path);
+                dst.getParentFile().mkdirs();
+                RubbishPak.writeFile(dst, RubbishPak.build(apks, rubbishSlots));
+                now.add(path);
+                Log.i(TAG, "built " + path);
+            } catch (Throwable t) {
+                Log.w(TAG, "Rubbish-DE pak not built: litter stays invisible", t);
+            }
+        }
         for (String p : old.subList(Math.min(1, old.size()), old.size())) {
             if (!now.contains(p) && new File(root, p).delete()) Log.i(TAG, "removed " + p);
         }
@@ -75,5 +101,42 @@ public final class Boot {
             out.write((stamp + "\n").getBytes("UTF-8"));
             for (String p : now) out.write((p + "\n").getBytes("UTF-8"));
         }
+    }
+
+    private static String readAsset(AssetManager assets, String name) {
+        try (InputStream in = assets.open(name)) {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[1 << 16];
+            for (int k; (k = in.read(buf)) > 0; ) out.write(buf, 0, k);
+            return out.toString("UTF-8");
+        } catch (IOException e) {
+            return null;  // not bundled: its patch was not selected
+        }
+    }
+
+    // Appends each [section] block of the bundled ini whose header line the user's ini does not have.
+    private static void appendNewSections(AssetManager assets, String asset, File dst) throws Exception {
+        List<String> headers = new ArrayList<>();
+        boolean endsWithNewline = true;
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(dst), StandardCharsets.UTF_8))) {
+            for (String l; (l = r.readLine()) != null; ) if (l.trim().startsWith("[")) headers.add(l.trim());
+        }
+        try (RandomAccessFile f = new RandomAccessFile(dst, "r")) {
+            if (f.length() > 0) { f.seek(f.length() - 1); endsWithNewline = f.read() == '\n'; }
+        }
+        StringBuilder add = new StringBuilder();
+        boolean copying = false;
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(assets.open(asset), StandardCharsets.UTF_8))) {
+            for (String l; (l = r.readLine()) != null; ) {
+                String t = l.trim();
+                if (t.startsWith("[")) copying = !headers.contains(t);
+                if (copying) add.append(l).append('\n');
+            }
+        }
+        if (add.length() == 0) return;
+        try (OutputStream out = new FileOutputStream(dst, true)) {
+            out.write(((endsWithNewline ? "\n" : "\n\n") + add).getBytes(StandardCharsets.UTF_8));
+        }
+        Log.i(TAG, "added new settings to " + dst.getName());
     }
 }

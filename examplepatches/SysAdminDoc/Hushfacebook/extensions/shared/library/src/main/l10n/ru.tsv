@@ -120,7 +120,7 @@ See-through bars	Прозрачные панели
 # context: description of that switch; the feed is the list of posts on Home, and blurred means frosted like glass
 The top bar and the tab bar turn see-through, so the feed shows through them as you scroll. On Android 12 and newer the feed behind them is blurred.	Верхняя панель и панель вкладок становятся прозрачными, и при прокрутке сквозь них видна Лента. На Android 12 и новее содержимое Ленты за панелями размывается.
 Rounded tab bar	Скруглённая панель вкладок
-With the tab bar at the bottom, it gets round ends and sits a little smaller, just above the bottom of the screen.	Когда панель вкладок внизу, у неё появляются круглые края и она становится чуть меньше, прямо над нижним краем экрана.
+With the tab bar at the bottom, it gets round ends and sits a little smaller, just above the bottom of the screen, with a soft highlight behind the tab you're on.	Когда панель вкладок внизу, у неё появляются круглые края и она становится чуть меньше, прямо над нижним краем экрана, а за открытой вкладкой появляется мягкая подсветка.
 # context: switch title under Appearance; it keeps Facebook's dark mode on whatever Facebook's own Dark mode setting says
 Force dark mode	Принудительно включить темный режим
 # context: description of that switch; on some tablets Facebook's own Settings page has no Dark mode row
@@ -1263,6 +1263,12 @@ With Stop Story auto-advance on, a finished story plays again from the start ins
 Save photo in post menus	Сохранять фото из меню публикаций
 # context: summary of the Save photo in post menus switch; "Save any photo" is the label of the switch above it and "Save photo" is the menu item, so use their translations
 With Save any photo on, a post with photos gets Save photo in its three-dot menu too. A post with several saves each one, one after another.	Если включена настройка «Сохранять любые фото», в меню публикации с фотографиями также появляется пункт «Сохранить фото». Если фото несколько, они сохраняются по одному.
+Search photo	Найти по фото
+Search photo with	Найти по фото с помощью
+Search photo in post menus	Поиск по фото в меню публикаций
+With Save any photo on, a post with one photo gets Search photo in its three-dot menu. It hands the photo to the app you pick, such as Google Lens, to look up what's in it or copy its text.	Когда включено «Сохранять любые фото», у публикации с одним фото в меню с тремя точками появляется «Найти по фото». Фото передаётся в выбранное приложение, например Google Lens, чтобы узнать, что на нём, или скопировать текст.
+No app on this phone can search with a photo	На этом телефоне нет приложения для поиска по фото
+Couldn't get this photo. Try again in a moment.	Не удалось получить это фото. Попробуйте ещё раз чуть позже.
 # context: menu item in a post's three-dot menu that saves the post's one photo to the phone
 Save photo	Сохранить фото
 # context: primary save row for a Story that reshares a Reel
@@ -1784,6 +1790,14 @@ With Pinch to zoom on, the photo or story stays zoomed when you let go, and a st
 Double tap to zoom	Увеличение двойным нажатием
 # context: summary of that switch; "Pinch to zoom" is the label of the switch two rows above it, so use its translation; a story is the full-screen picture or video someone shares for a day
 With Pinch to zoom on, double tap a photo on a profile to zoom in where you tapped, and double tap again to put it back. A single tap still opens the photo, a moment later.	Если включено масштабирование жестом, дважды нажмите на фото в профиле, чтобы увеличить область под пальцем, и нажмите дважды снова, чтобы вернуть исходный размер. Одиночное нажатие по-прежнему открывает фото с небольшой задержкой.
+# context: a switch under Pinch to zoom; with it on, the rest of the screen gets darker behind a zoomed photo or story
+Dim around a zoom	Затемнять вокруг увеличения
+# context: that switch's summary; "Pinch to zoom" is the label of the switch above it, so use its translation; a story is the full-screen picture or video someone shares for a day
+With Pinch to zoom on, the screen around a photo or story darkens as you zoom in. Turn it off to keep the rest of the screen as it is.	Если включено масштабирование жестом, экран вокруг фото или Истории темнеет, пока вы увеличиваете. Выключите, чтобы остальная часть экрана оставалась как есть.
+# context: a switch under Pinch to zoom; with it on, a video you zoom keeps moving instead of freezing on the frame it showed
+Keep videos playing while zoomed	Не останавливать видео при увеличении
+# context: that switch's summary; "Pinch to zoom" and "Stay zoomed" are the labels of switches above it, so use their translations; a Page is a business's or public figure's Facebook page; a story is the full-screen picture or video someone shares for a day
+With Pinch to zoom on, a video you zoom on a profile or Page keeps playing. With Stay zoomed on too, press and hold the zoom to pause the video, and again to play it. Stories hold still while you zoom.	Если включено масштабирование жестом, видео, которое вы увеличили в профиле или на Странице, продолжает играть. Если также включено «Сохранять масштаб», нажмите и удерживайте увеличенное изображение, чтобы поставить видео на паузу, и еще раз, чтобы воспроизвести его. Истории во время увеличения не двигаются.
 No ads downloaded in advance	Не загружать рекламу заранее
 No ad tracking	Не отслеживать рекламу
 No Facebook ads in other apps	Не показывать рекламу Facebook в других приложениях
@@ -2180,6 +2194,10 @@ Adds a cast button to feed videos. It hands the video to a casting app you have,
 Cast this video	Транслировать это видео
 Full player button on feed videos	Кнопка полного плеера для видео в Ленте
 Adds a button to feed videos that opens the video in Facebook's own full player, with all its controls. Live videos get it too. With Tap to play on, it needs Inline feed video controls on too.	Добавляет к видео в Ленте кнопку, которая открывает видео в полном плеере Facebook со всеми его элементами управления. Прямые эфиры тоже ее получают. Если включено воспроизведение по нажатию, необходимо также включить встроенные элементы управления видео в Ленте.
+# context: a switch under Video and audio; with it on, a video opened full screen starts with its details and comments panel closed, so the video is in the middle of the screen
+Open full screen videos centered	Открывать полноэкранные видео по центру
+# context: that switch's summary; the arrow is the small button under the video that opens and closes the details and comments panel
+Videos you open full screen, from a comment or a link, start with their details and comments folded away, so the video sits in the middle of the screen. The arrow under it still brings them back.	Видео, которые вы открываете на весь экран из комментария или по ссылке, начинаются со свёрнутыми подробностями и комментариями, поэтому видео оказывается посередине экрана. Стрелка под ним по-прежнему возвращает их.
 Open in the full player	Открыть в полном плеере
 Seek bar on feed videos	Полоса перемотки для видео в Ленте
 Shows a bar along the bottom of a feed video. Drag it and let go to jump to that point. Live videos and ads keep their own controls. With Tap to play on, it needs Inline feed video controls on too.	Показывает внизу видео в Ленте полосу перемотки. Перетащите ползунок и отпустите, чтобы перейти к нужному моменту. Для прямых эфиров и рекламы остаются собственные элементы управления. Если включено воспроизведение по нажатию, необходимо также включить встроенные элементы управления видео в Ленте.

@@ -13,19 +13,21 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.7.2](https://github.com/TorbenStriegel/morphe-patches-custom/releases/tag/v1.7.2)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;8 patches total
+> **[v1.8.0](https://github.com/TorbenStriegel/morphe-patches-custom/releases/tag/v1.8.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;10 patches total
 <details open>
-<summary>📦 OneFootball&nbsp;&nbsp;•&nbsp;&nbsp;1 patch</summary>
+<summary>📦 OneFootball&nbsp;&nbsp;•&nbsp;&nbsp;3 patches</summary>
 <br>
 
 **🎯 Supported versions:**
 
-| 15.145.0 |
-| :---: |
+| 15.145.0 | 15.148.0 |
+| :---: | :---: |
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
 | [Disable ads](#disable-ads) | Disables banner, interstitial, native, app-open and rewarded ads. |  |
+| [Hide match FanShop promotions](#hide-match-fanshop-promotions) | Hides the FanShop product carousel on the match overview. |  |
+| [Hide match betting odds](#hide-match-betting-odds) | Disables bookmaker betting cards and odds on the match overview while retaining match predictions. |  |
 
 </details>
 

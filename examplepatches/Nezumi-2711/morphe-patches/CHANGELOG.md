@@ -1,3 +1,15 @@
+## [1.4.0-dev.3](https://github.com/Nezumi-2711/morphe-patches/compare/v1.4.0-dev.2...v1.4.0-dev.3) (2026-11-05)
+
+### 🐛 Bug Fixes
+
+* drop legacy Zalo version support ([a32f638](https://github.com/Nezumi-2711/morphe-patches/commit/a32f638f869860b0b217c9691a476a7f385aee62))
+
+## [1.4.0-dev.2](https://github.com/Nezumi-2711/morphe-patches/compare/v1.4.0-dev.1...v1.4.0-dev.2) (2026-11-05)
+
+### 🐛 Bug Fixes
+
+* group Nezumi navigation settings ([cc499a5](https://github.com/Nezumi-2711/morphe-patches/commit/cc499a586e0a7a0a7f43027ec68e4421809612c8))
+
 ## [1.4.0-dev.1](https://github.com/Nezumi-2711/morphe-patches/compare/v1.3.1-dev.1...v1.4.0-dev.1) (2026-11-04)
 
 ### ✨ New Features

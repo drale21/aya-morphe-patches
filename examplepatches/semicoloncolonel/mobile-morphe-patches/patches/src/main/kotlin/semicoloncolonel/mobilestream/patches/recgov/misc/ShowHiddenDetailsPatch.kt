@@ -54,9 +54,7 @@ private fun MutableMethod.filterReturnedText(helper: String) {
 @Suppress("unused")
 val showHiddenDetailsPatch = bytecodePatch(
     name = "Show hidden details",
-    description = "Shows details the app receives but hides: ticket lottery applicant and ticket counts " +
-        "(in a dialog), when ticket sales close for each time slot, facility booking " +
-        "window rules, your lottery confirmation deadlines, and venue booking times.",
+    description = "Shows ticket lottery, ticket sales, and booking details the app receives but hides.",
     default = false,
 ) {
     compatibleWith(Constants.COMPATIBILITY)

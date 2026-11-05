@@ -756,6 +756,15 @@ final class FeedPages {
                         L10n.t("With Pinch to zoom on, double tap a photo on a profile to zoom in where you tapped, "
                                 + "and double tap again to put it back. A single tap still opens the photo, a moment later."))
                         .needs(Settings.PINCH_TO_ZOOM));
+                stories.addPreference(toggle(context, Settings.PINCH_TO_ZOOM_DIM,
+                        L10n.t("With Pinch to zoom on, the screen around a photo or story darkens as you zoom in. "
+                                + "Turn it off to keep the rest of the screen as it is."))
+                        .needs(Settings.PINCH_TO_ZOOM));
+                stories.addPreference(toggle(context, Settings.PINCH_TO_ZOOM_LIVE,
+                        L10n.t("With Pinch to zoom on, a video you zoom on a profile or Page keeps playing. "
+                                + "With Stay zoomed on too, press and hold the zoom to pause the video, and again to play it. "
+                                + "Stories hold still while you zoom."))
+                        .needs(Settings.PINCH_TO_ZOOM));
             }
         }
     }

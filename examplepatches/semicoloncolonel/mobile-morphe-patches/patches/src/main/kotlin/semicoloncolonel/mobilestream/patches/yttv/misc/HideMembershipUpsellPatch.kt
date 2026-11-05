@@ -46,7 +46,7 @@ private fun filterCall(register: String) =
 @Suppress("unused")
 val hideMembershipUpsellPatch = bytecodePatch(
     name = "Hide membership upsell",
-    description = "Hides the \"Add to membership\" shelf on the home screen, with no empty space left behind.",
+    description = "Hides the \"Add to membership\" shelf on the home screen.",
     default = false,
 ) {
     compatibleWith(Constants.COMPATIBILITY)

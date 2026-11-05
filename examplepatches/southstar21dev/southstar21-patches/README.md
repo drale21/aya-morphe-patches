@@ -43,9 +43,9 @@ Patched apps are signed with a different key, so uninstall the Play Store versio
 ## Patches
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.0.0](https://github.com/southstar21dev/southstar21-patches/releases/tag/v1.0.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
+> **[v1.1.0](https://github.com/southstar21dev/southstar21-patches/releases/tag/v1.1.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;7 patches total
 <details open>
-<summary>📦 Instagram&nbsp;&nbsp;•&nbsp;&nbsp;6 patches</summary>
+<summary>📦 Instagram&nbsp;&nbsp;•&nbsp;&nbsp;7 patches</summary>
 <br>
 
 **🎯 Supported versions:**
@@ -56,7 +56,8 @@ Patched apps are signed with a different key, so uninstall the Play Store versio
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
 | [Bypass signature check](#bypass-signature-check) | Stops Instagram rejecting apps by their signature, which a patched app no longer matches. |  |
-| [Disable Reels](#disable-reels) | Removes reels from the home feed and Explore, and stops scrolling from one reel to the next. Each part can be switched off in the settings. |  |
+| [Disable Reels](#disable-reels) | Removes reels from the home feed and Explore, and stops scrolling from one reel to the next. Each part is off until you switch it on in the settings. |  |
+| [Hide ads](#hide-ads) | Removes sponsored posts, stories and reels, and ad units in the home feed. Each part can be switched off in the settings. |  |
 | [Hide navigation buttons](#hide-navigation-buttons) | Adds settings to hide Search, Reels, Create, Messages and other tabs from the bottom bar. |  |
 | [Liquid Glass navigation bar](#liquid-glass-navigation-bar) | Turns the bottom tab bar into a floating iOS 26 style Liquid Glass pill with live background blur and edge refraction. Refraction needs Android 13+, blur needs Android 12+, older versions get a tinted pill. | • Blur radius<br>• Refraction strength<br>• Extend content behind bar |
 | [Remove build expired popup](#remove-build-expired-popup) | Removes the popup that appears after a while, when the app version ages. |  |
@@ -97,15 +98,33 @@ Takes Reels out of Instagram. Each part has its own switch on the patch's page i
 
 | Setting | Default | |
 |---|---|---|
-| Home feed | on | Drops reel posts and "Suggested reels" style units as the feed loads. |
-| Explore | on | Drops Explore grid sections that contain a reel. Whole sections go, since removing single tiles would break Instagram's grid layouts. |
-| Stop scrolling | on | A reel opened from a message or a profile plays alone, with swiping to the next one locked. |
+| Home feed | off | Drops reel posts and "Suggested reels" style units as the feed loads. |
+| Explore | off | Drops Explore grid sections that contain a reel. Whole sections go, since removing single tiles would break Instagram's grid layouts. |
+| Stop scrolling | off | A reel opened from a message or a profile plays alone, with swiping to the next one locked. |
 | Block Reels player | off | Reels don't open at all, including ones sent in messages. |
 
 <details>
 <summary>How it works</summary>
 
 Instagram parses every home feed item, and every Explore section, through one method each; the patch returns nothing for reels there, which Instagram already skips. The Reels player's pager is found by its view id (`clips_viewer_view_pager`), and the player itself is closed from `ClipsViewerFragment.onViewCreated` when blocked.
+
+</details>
+
+### Hide ads
+
+Takes ads out of Instagram. Each part has its own switch on the patch's page in the [settings menu](#settings-menu).
+
+| Setting | Default | |
+|---|---|---|
+| Sponsored posts | on | Ads in the home feed, Stories, Reels and feeds opened from Explore. |
+| Ad units in the feed | on | Ad carousels and "Why am I seeing ads" prompts that come with the home feed. |
+
+Ads Instagram had already loaded may still show once after switching it on.
+
+<details>
+<summary>How it works</summary>
+
+Feed, Stories, Reels and the other feeds share one sponsored content controller, which receives every batch of ads Instagram fetches and slots them between posts. The patch empties each batch on arrival, which Instagram handles as a delivery with no ads. Ad units that come inside the home feed response (`AD`, ad pivots, ads feedback prompts) are dropped where each feed item is parsed, the same method Disable Reels uses.
 
 </details>
 

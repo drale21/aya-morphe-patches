@@ -13,7 +13,10 @@ cp "$REPO/loader/aml/libs/arm64-v8a/libAML.so" \
    "$M/projectpropsde/libs/arm64-v8a/libprojectpropsde.so" "$M/projectpropsde/ProjectPropsDE.ini" "$M/projectpropsde/ProjectPropsDE.stock" \
    "$M/cleo/libs/arm64-v8a/libcleo.so" "$M/pakloader/libs/arm64-v8a/libpakloader.so" \
    "$M/loadingmusic/libs/arm64-v8a/libloadingmusic.so" "$M/loadingmusic/LoadingMusic.ini" \
+   "$M/rubbish/libs/arm64-v8a/librubbish.so" "$M/rubbish/Rubbish-DE.ini" \
    "$DST/"
 ls "$DST"
 # CLEO Android's SA scripts (BSD-3), DE-adapted where needed: copied to Android/data/<game>/cleo/ by the CLEO patch
 mkdir -p "$DST/cleo" && cp "$M"/cleo/scripts/* "$DST/cleo/" && ls "$M/cleo/scripts" > "$DST/cleo.list"
+# Rubbish-DE's model slots: Boot builds its pak from the game's own pakchunk0 on the device (no game files shipped)
+mkdir -p "$DST/rubbish" && cp "$M/rubbish/pak/slots.json" "$DST/rubbish/"

@@ -351,6 +351,10 @@ final class VideoPages {
                     playback.addPreference(toggle(context, Settings.FEED_VIDEO_CAST_BUTTON,
                             L10n.t("Adds a cast button to feed videos. It hands the video to a casting app you have, such as Web Video Caster, which sends it to your TV. Facebook has no casting of its own anymore.")));
                 }
+                // Asked as the full screen player sets each video up, so it applies to the next one you open.
+                playback.addPreference(toggle(context, Settings.CENTER_FULL_SCREEN_VIDEOS,
+                        L10n.t("Videos you open full screen, from a comment or a link, start with their details and comments folded away, "
+                                + "so the video sits in the middle of the screen. The arrow under it still brings them back.")));
             }
             if (build.contains(PatchFamily.RESUME_LONG_VIDEOS)) {
                 playback.addPreference(toggle(context, Settings.RESUME_LONG_VIDEOS,
@@ -478,6 +482,8 @@ final class VideoPages {
                                 + " " + L10n.t("A GIF comment gets Save GIF when you long-press it.")));
                 downloads.addPreference(toggle(context, Settings.POST_MENU_PHOTO_SAVE,
                         L10n.t("With Save any photo on, a post with photos gets Save photo in its three-dot menu too. A post with several saves each one, one after another.")));
+                downloads.addPreference(toggle(context, Settings.POST_MENU_PHOTO_SEARCH,
+                        L10n.t("With Save any photo on, a post with one photo gets Search photo in its three-dot menu. It hands the photo to the app you pick, such as Google Lens, to look up what's in it or copy its text.")));
             }
             // Every save reads these, a story's and a reel's as much as a feed video's, so they're here
             // whichever download patch is in, the compatible ones above the quality they keep within.

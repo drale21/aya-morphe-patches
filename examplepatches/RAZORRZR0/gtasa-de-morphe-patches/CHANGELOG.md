@@ -1,3 +1,25 @@
+## [1.2.2](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/compare/v1.2.1...v1.2.2) (2026-11-05)
+
+### 🐛 Bug Fixes
+
+* GTA Prop Fix patch is named Fix prop physics and describes the prop physics it restores ([edacf47](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/commit/edacf4784555c0b6d1e2ec058fdd887369f71b0b))
+
+## [1.2.1](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/compare/v1.2.0...v1.2.1) (2026-11-05)
+
+### 🐛 Bug Fixes
+
+* re-patching an already patched game runs the new mod loader, so Add blowing litter builds its pak instead of leaving piles of litter models ([ec3b79e](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/commit/ec3b79ed98c6dae9e3d639918cb2e11432a146b7))
+
+## [1.2.0](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/compare/v1.1.1...v1.2.0) (2026-11-05)
+
+### ✨ New Features
+
+* Add blowing litter (Rubbish-DE by H4V3NART) and SkyGfx PC graphics settings with AMD FSR 1 upscaling ([5a712ff](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/commit/5a712ffa603f7b857f176e43c35b2a05be32dee7))
+
+### 🐛 Bug Fixes
+
+* warn that split APK sets fail to patch (merged APK over 4 GB), credit mod authors ([5e53cbc](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/commit/5e53cbc3f384eac5e0c23dc1c7e348f9979e1d8a))
+
 ## [1.1.1](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/compare/v1.1.0...v1.1.1) (2026-11-02)
 
 ### 🐛 Bug Fixes

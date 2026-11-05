@@ -116,7 +116,7 @@ See-through bars	Saydam çubuklar
 # context: description of that switch; the feed is the list of posts on Home, and blurred means frosted like glass
 The top bar and the tab bar turn see-through, so the feed shows through them as you scroll. On Android 12 and newer the feed behind them is blurred.	Üst çubuk ve sekme çubuğu saydam olur, böylece kaydırırken akış arkalarından görünür. Android 12 ve sonrasında arkalarındaki akış bulanıklaştırılır.
 Rounded tab bar	Yuvarlak sekme çubuğu
-With the tab bar at the bottom, it gets round ends and sits a little smaller, just above the bottom of the screen.	Sekme çubuğu alttayken uçları yuvarlak olur ve biraz küçülür, ekranın alt kenarının hemen üstünde durur.
+With the tab bar at the bottom, it gets round ends and sits a little smaller, just above the bottom of the screen, with a soft highlight behind the tab you're on.	Sekme çubuğu alttayken uçları yuvarlak olur ve biraz küçülür, ekranın alt kenarının hemen üstünde durur ve açık olan sekmenin arkasında hafif bir vurgu görünür.
 # context: switch title under Appearance; it keeps Facebook's dark mode on whatever Facebook's own Dark mode setting says
 Force dark mode	Karanlık modu zorla
 # context: description of that switch; on some tablets Facebook's own Settings page has no Dark mode row
@@ -1237,6 +1237,12 @@ With Stop Story auto-advance on, a finished story plays again from the start ins
 Save photo in post menus	Gönderi menülerinde fotoğrafı kaydet
 # context: summary of the Save photo in post menus switch; "Save any photo" is the label of the switch above it and "Save photo" is the menu item, so use their translations
 With Save any photo on, a post with photos gets Save photo in its three-dot menu too. A post with several saves each one, one after another.	Her fotoğrafı kaydet açıkken, fotoğraflı bir gönderinin üç nokta menüsünde de Fotoğrafı kaydet çıkar. Birden çok fotoğraf varsa her biri sırayla kaydedilir.
+Search photo	Fotoğrafla ara
+Search photo with	Fotoğrafla şununla ara
+Search photo in post menus	Gönderi menülerinde fotoğrafla ara
+With Save any photo on, a post with one photo gets Search photo in its three-dot menu. It hands the photo to the app you pick, such as Google Lens, to look up what's in it or copy its text.	Her fotoğrafı kaydet açıkken tek fotoğraflı bir gönderinin üç nokta menüsüne Fotoğrafla ara eklenir. Fotoğraf, içinde ne olduğunu bulmak ya da metnini kopyalamak için seçtiğin uygulamaya, örneğin Google Lens'e gider.
+No app on this phone can search with a photo	Bu telefonda fotoğrafla arama yapabilen bir uygulama yok
+Couldn't get this photo. Try again in a moment.	Bu fotoğraf alınamadı. Birazdan tekrar dene.
 # context: menu item in a post's three-dot menu that saves the post's one photo to the phone
 Save photo	Fotoğrafı kaydet
 # context: primary save row for a Story that reshares a Reel
@@ -1744,6 +1750,14 @@ With Pinch to zoom on, the photo or story stays zoomed when you let go, and a st
 Double tap to zoom	Yakınlaştırmak için çift dokun
 # context: summary of that switch; "Pinch to zoom" is the label of the switch two rows above it, so use its translation; a story is the full-screen picture or video someone shares for a day
 With Pinch to zoom on, double tap a photo on a profile to zoom in where you tapped, and double tap again to put it back. A single tap still opens the photo, a moment later.	Yakınlaştırmak için kıstır açıkken profildeki bir fotoğrafa çift dokunarak dokunduğun yere yakınlaşırsın, tekrar çift dokununca eski haline döner. Tek dokunuş fotoğrafı yine açar, sadece bir an sonra.
+# context: a switch under Pinch to zoom; with it on, the rest of the screen gets darker behind a zoomed photo or story
+Dim around a zoom	Yakınlaştırmanın çevresini karart
+# context: that switch's summary; "Pinch to zoom" is the label of the switch above it, so use its translation; a story is the full-screen picture or video someone shares for a day
+With Pinch to zoom on, the screen around a photo or story darkens as you zoom in. Turn it off to keep the rest of the screen as it is.	Yakınlaştırmak için kıstır açıkken, yakınlaştırdıkça bir fotoğrafın veya hikayenin çevresindeki ekran kararır. Ekranın geri kalanını olduğu gibi bırakmak için kapat.
+# context: a switch under Pinch to zoom; with it on, a video you zoom keeps moving instead of freezing on the frame it showed
+Keep videos playing while zoomed	Yakınlaştırırken videolar oynamaya devam etsin
+# context: that switch's summary; "Pinch to zoom" and "Stay zoomed" are the labels of switches above it, so use their translations; a Page is a business's or public figure's Facebook page; a story is the full-screen picture or video someone shares for a day
+With Pinch to zoom on, a video you zoom on a profile or Page keeps playing. With Stay zoomed on too, press and hold the zoom to pause the video, and again to play it. Stories hold still while you zoom.	Yakınlaştırmak için kıstır açıkken bir profilde veya Sayfada yakınlaştırdığın video oynamaya devam eder. Yakınlaştırılmış kalsın da açıksa videoyu duraklatmak için yakınlaştırmaya basılı tut, oynatmak için yine basılı tut. Hikayeler yakınlaştırırken hareketsiz kalır.
 No ads downloaded in advance	Önceden indirilen reklam yok
 No ad tracking	Reklam takibi yok
 No Facebook ads in other apps	Diğer uygulamalarda Facebook reklamı yok
@@ -2136,6 +2150,10 @@ Adds a cast button to feed videos. It hands the video to a casting app you have,
 Cast this video	Bu videoyu yayınla
 Full player button on feed videos	Akış videolarında tam oynatıcı düğmesi
 Adds a button to feed videos that opens the video in Facebook's own full player, with all its controls. Live videos get it too. With Tap to play on, it needs Inline feed video controls on too.	Akış videolarına, videoyu Facebook'un kendi tam oynatıcısında tüm denetimleriyle açan bir düğme ekler. Canlı videolarda da bulunur. “Oynatmak için dokun” açıksa “Akış videosu denetimleri” de açık olmalıdır.
+# context: a switch under Video and audio; with it on, a video opened full screen starts with its details and comments panel closed, so the video is in the middle of the screen
+Open full screen videos centered	Tam ekran videoları ortada aç
+# context: that switch's summary; the arrow is the small button under the video that opens and closes the details and comments panel
+Videos you open full screen, from a comment or a link, start with their details and comments folded away, so the video sits in the middle of the screen. The arrow under it still brings them back.	Bir yorumdan ya da bağlantıdan tam ekran açtığın videolar ayrıntılar ve yorumlar katlanmış olarak başlar, böylece video ekranın ortasında durur. Altındaki ok onları yine geri getirir.
 Open in the full player	Tam oynatıcıda aç
 Seek bar on feed videos	Akış videolarında sarma çubuğu
 Shows a bar along the bottom of a feed video. Drag it and let go to jump to that point. Live videos and ads keep their own controls. With Tap to play on, it needs Inline feed video controls on too.	Akıştaki bir videonun altında bir çubuk gösterir. Sürükleyip bırakarak o noktaya atlayın. Canlı videolar ve reklamlar kendi denetimlerini korur. “Oynatmak için dokun” açıksa “Akış videosu denetimleri” de açık olmalıdır.

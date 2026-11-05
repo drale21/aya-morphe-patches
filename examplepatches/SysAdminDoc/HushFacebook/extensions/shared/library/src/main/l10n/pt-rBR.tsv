@@ -116,7 +116,7 @@ See-through bars	Barras transparentes
 # context: description of that switch; the feed is the list of posts on Home, and blurred means frosted like glass
 The top bar and the tab bar turn see-through, so the feed shows through them as you scroll. On Android 12 and newer the feed behind them is blurred.	A barra superior e a barra de abas ficam transparentes, então o feed aparece por trás delas enquanto você rola. No Android 12 ou mais recente, o feed atrás delas fica desfocado.
 Rounded tab bar	Barra de abas arredondada
-With the tab bar at the bottom, it gets round ends and sits a little smaller, just above the bottom of the screen.	Com a barra de abas embaixo, ela ganha pontas arredondadas e fica um pouco menor, logo acima da borda de baixo da tela.
+With the tab bar at the bottom, it gets round ends and sits a little smaller, just above the bottom of the screen, with a soft highlight behind the tab you're on.	Com a barra de abas embaixo, ela ganha pontas arredondadas e fica um pouco menor, logo acima da borda de baixo da tela, com um destaque suave atrás da aba em que você está.
 # context: switch title under Appearance; it keeps Facebook's dark mode on whatever Facebook's own Dark mode setting says
 Force dark mode	Forçar modo escuro
 # context: description of that switch; on some tablets Facebook's own Settings page has no Dark mode row
@@ -1123,6 +1123,12 @@ With Stop Story auto-advance on, a finished story plays again from the start ins
 Save photo in post menus	Salvar foto no menu das publicações
 # context: summary of the Save photo in post menus switch; "Save any photo" is the label of the switch above it and "Save photo" is the menu item, so use their translations
 With Save any photo on, a post with photos gets Save photo in its three-dot menu too. A post with several saves each one, one after another.	Com Salvar qualquer foto ativado, uma publicação com fotos também mostra Salvar foto no menu de três pontos. Se tiver várias, cada uma é salva, uma depois da outra.
+Search photo	Pesquisar foto
+Search photo with	Pesquisar foto com
+Search photo in post menus	Pesquisar foto nos menus de publicações
+With Save any photo on, a post with one photo gets Search photo in its three-dot menu. It hands the photo to the app you pick, such as Google Lens, to look up what's in it or copy its text.	Com Salvar qualquer foto ativado, uma publicação com uma foto ganha Pesquisar foto no menu de três pontos. A foto vai para o app que você escolher, como o Google Lens, para descobrir o que tem nela ou copiar o texto.
+No app on this phone can search with a photo	Nenhum app deste celular consegue pesquisar com uma foto
+Couldn't get this photo. Try again in a moment.	Não foi possível obter esta foto. Tente de novo em instantes.
 # context: menu item in a post's three-dot menu that saves the post's one photo to the phone
 Save photo	Salvar foto
 # context: primary save row for a Story that reshares a Reel
@@ -1630,6 +1636,14 @@ With Pinch to zoom on, the photo or story stays zoomed when you let go, and a st
 Double tap to zoom	Toque duplo para dar zoom
 # context: summary of that switch; "Pinch to zoom" is the label of the switch two rows above it, so use its translation; a story is the full-screen picture or video someone shares for a day
 With Pinch to zoom on, double tap a photo on a profile to zoom in where you tapped, and double tap again to put it back. A single tap still opens the photo, a moment later.	Com Pinçar para dar zoom ativado, dê dois toques em uma foto de um perfil para ampliar onde você tocou e dois toques de novo para voltar ao normal. Um toque só ainda abre a foto, um instante depois.
+# context: a switch under Pinch to zoom; with it on, the rest of the screen gets darker behind a zoomed photo or story
+Dim around a zoom	Escurecer ao redor do zoom
+# context: that switch's summary; "Pinch to zoom" is the label of the switch above it, so use its translation; a story is the full-screen picture or video someone shares for a day
+With Pinch to zoom on, the screen around a photo or story darkens as you zoom in. Turn it off to keep the rest of the screen as it is.	Com Pinçar para dar zoom ativado, a tela ao redor de uma foto ou Story escurece enquanto você amplia. Desative para deixar o resto da tela como está.
+# context: a switch under Pinch to zoom; with it on, a video you zoom keeps moving instead of freezing on the frame it showed
+Keep videos playing while zoomed	Continuar reproduzindo vídeos com zoom
+# context: that switch's summary; "Pinch to zoom" and "Stay zoomed" are the labels of switches above it, so use their translations; a Page is a business's or public figure's Facebook page; a story is the full-screen picture or video someone shares for a day
+With Pinch to zoom on, a video you zoom on a profile or Page keeps playing. With Stay zoomed on too, press and hold the zoom to pause the video, and again to play it. Stories hold still while you zoom.	Com Pinçar para dar zoom ativado, um vídeo em que você dá zoom num perfil ou numa Página continua tocando. Com Manter o zoom ativado também, toque e segure o zoom para pausar o vídeo, e de novo para dar play. Stories ficam parados enquanto você dá zoom.
 No ads downloaded in advance	Sem anúncios baixados antes da hora
 No ad tracking	Sem rastreamento de anúncios
 No Facebook ads in other apps	Sem anúncios do Facebook em outros apps
@@ -2022,6 +2036,10 @@ Adds a cast button to feed videos. It hands the video to a casting app you have,
 Cast this video	Transmitir este vídeo
 Full player button on feed videos	Botão de player completo nos vídeos do feed
 Adds a button to feed videos that opens the video in Facebook's own full player, with all its controls. Live videos get it too. With Tap to play on, it needs Inline feed video controls on too.	Adiciona um botão aos vídeos do feed que abre o vídeo no player completo do próprio Facebook, com todos os controles. Vídeos ao vivo também ganham o botão. Com “Tocar para reproduzir” ligado, “Controles de vídeo no feed” também precisa estar ligado.
+# context: a switch under Video and audio; with it on, a video opened full screen starts with its details and comments panel closed, so the video is in the middle of the screen
+Open full screen videos centered	Abrir vídeos em tela cheia centralizados
+# context: that switch's summary; the arrow is the small button under the video that opens and closes the details and comments panel
+Videos you open full screen, from a comment or a link, start with their details and comments folded away, so the video sits in the middle of the screen. The arrow under it still brings them back.	Vídeos que você abre em tela cheia, de um comentário ou de um link, começam com os detalhes e os comentários recolhidos, então o vídeo fica no meio da tela. A seta embaixo dele ainda os traz de volta.
 Open in the full player	Abrir no player completo
 Seek bar on feed videos	Barra de progresso nos vídeos do feed
 Shows a bar along the bottom of a feed video. Drag it and let go to jump to that point. Live videos and ads keep their own controls. With Tap to play on, it needs Inline feed video controls on too.	Mostra uma barra na parte de baixo de um vídeo do feed. Arraste e solte para pular para esse ponto. Vídeos ao vivo e anúncios mantêm os próprios controles. Com “Tocar para reproduzir” ligado, “Controles de vídeo no feed” também precisa estar ligado.

@@ -1,3 +1,10 @@
+## [1.0.8](https://github.com/semicoloncolonel/mobile-morphe-patches/compare/v1.0.7...v1.0.8) (2026-11-05)
+
+
+### Features
+
+* add Xumo Play, a YouTube TV live ad mask, and JustWatch on Android TV ([d15f7a0](https://github.com/semicoloncolonel/mobile-morphe-patches/commit/d15f7a02acba56a556b45bebb9fab8abd524174b))
+
 ## [1.0.7](https://github.com/semicoloncolonel/mobile-morphe-patches/compare/v1.0.6...v1.0.7) (2026-11-04)
 
 
