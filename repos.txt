@@ -109,6 +109,7 @@ brealorg/breal-morphe-patches
 brosssh/morphe-patches
 browzomje/browzomje-patches
 bruddaa/bruddas-morphe-patches
+bryceaspringfield/morphe-reddit-keyword-filter
 bufferk/morphe-patches
 Bugg4/bugg4s-patches
 burakdede0/SyncPatch
@@ -137,6 +138,7 @@ cingxcong/telegram-morphe-patches-
 ciraolone/morphe-watch-later
 claviola/morphe-patches-nl
 codeghost-glitch/codeghost-patches
+coloradude/morphe-google-messages-patch
 commit-regrets/morphe-youtube-vr-patches
 ComoEstaisAmigos/ck-zombies-morphe-patches
 contactjayclatty/tracket-patches
@@ -154,6 +156,7 @@ danieleavolio/column-patches
 danieleavolio/lovaion-patches
 daqot-The-real-one/morphe-patches
 DarioDKM/ringconn-patches
+DasCarstel/yazio-patches
 david419kr/niconico-yt-morphe-patches
 DavidSpivey/walmart-morphe-patches
 debakarr/morphe-patches
@@ -195,6 +198,7 @@ eZ4RK0/morphe-patches
 fangkampanat/gmaps-patches
 fangkampanat/google-maps-automotive-patches
 feixiangdao/letterboxd-stremio-nuvio-morphe-patch
+ffejhog/ffejhog_morphe_patches
 FinzoYFunzo/kyt-patches
 FluffyDiscord/miui-screen-recorder-fps-unlock
 Forsigh/waze-patches
@@ -317,6 +321,7 @@ k2ej/standby
 K8R8TO/kizu-morphe-patches
 kanup4m/morphe-patches
 kareemlukitomo/morphe-patches
+Kdroidwin/gaugau-morphe
 Kecerim24/morphe-patches
 Kekimurus/GCamVBoost
 Kero309x/anghamiplus-patches
@@ -442,6 +447,7 @@ phamleduy04/duy-patches
 picarica/My-moprhe-patches
 Piel-M/piko-gif-patch
 pigfoot/morphe-patches
+pilahito/atresplayer-patches
 Pilotkosinus/morphe-waze-patches
 Pilotkosinus/Muellpatch
 Piracola/Pixiv-Patched
@@ -479,6 +485,7 @@ rikunode/x-feed-cleanup-patches
 riky-dev/morphe-patches
 Ripthulhu/morphe-google-patches
 ritikthakur22/morphe-patches
+RizkLee/morphe-bilibili-danmaku
 RjBiermann/brave-waffle
 romanchukg-cloud/maps-automotive-for-byd-patches
 RookieEnough/De-Vanced
@@ -516,6 +523,7 @@ ShubhamJ010/gboard-clipboard-history
 ShuhaibNC/morphe-patches
 sillyredsoup/reddit-morphe-patches
 sjshb57/Pairip-Patches
+sk1nnnny/morphe-patche
 skulldogged/cobalt-morphe
 Smart123s/morphe-patches
 snowyegret23/morphe-patches
@@ -539,8 +547,8 @@ Supperelias2/sbs-morphe-patches
 Supperelias2/sbs-tv-morphe-patches
 sushruth/imgur-patches
 Sylonin/xposed-newx-patches
-SysAdminDoc/Hushfacebook
 SysAdminDoc/HushFacebook
+SysAdminDoc/Hushfacebook
 SysAdminDoc/hushfeed
 SysAdminDoc/HushFeed
 SysAdminDoc/HushGram
