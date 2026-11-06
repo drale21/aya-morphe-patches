@@ -126,6 +126,70 @@ Conclusion from both: the enforcement sits in `libpairipcore.so` (plus the class
 no dex or manifest patch reaches it. The prototype change was reverted, so the shipped bundle is
 byte-for-byte unchanged.
 
+## Second pass — patching the native library
+
+Source: `split_config.arm64_v8a.apk` → `lib/arm64-v8a/libpairipcore.so` (608,896 bytes, build id
+`1e3b4544…`). All of its file offsets equal its virtual addresses (first `LOAD` is `0x0`/`0x0`), so a
+crash `pc` maps straight onto the file. Build tested: the shipped 1.1.0 output, `.so` edited, re-zipped,
+zipaligned (`-P 16`) and signed.
+
+### Fault 1 — `0x330c4`, a 16-bit length that overflows
+
+The tombstone carries the registers, which settle what is happening:
+
+```
+signal 11 (SIGSEGV), code 2 (SEGV_ACCERR), fault addr 0xb400007d403de000 (read)
+  x0  b400007d401f3680   x1  0000007fe41a8948
+  x12 b400007d4025b0e3   x13 0000000000182f1d   x11 00000000ffe75554
+  pc  0000007ced1390c4
+```
+
+`x12` is the range base, `x13` the index and the fault address is exactly `x12 + x13`, i.e. the loop
+walked `1,585,437` bytes off the end of a ~3.9 MB heap buffer and hit an unmapped page. The counter is
+loaded with `ldrsh`, so a length of 32,768 or more becomes negative and `subs`/`b.ne` never reaches
+zero. The function reads a descriptor on the stack (`x1`) and FNV-1 hashes two ranges from the blob
+(`x0`) against expected values — the 64-bit offset basis `0xcbf29ce484222325` and prime
+`0x100000001b3` are both visible in it.
+
+First patch, one instruction:
+
+```
+0x330a0  ldrsh w11, [x1, #0x2c]   ->   ldrh w11, [x1, #0x2c]
+         79c0582b                       7940582b
+```
+
+Result: that fault is gone and the process now dies at `0x5fd9c` — the same hash loop, inlined a
+second time (`ldrsh w9, [x1, #0x14]` at `0x5fd6c`). Two descriptors handing the hasher a negative
+length is not a coincidence.
+
+### Fault 2 — `0x5fd9c`, then `0x50c24`
+
+Patching all three descriptor-length loads (`0x33028`, `0x330a0`, `0x5fd6c`, each `ldrsh`→`ldrh`)
+moved the crash again, to `0x50c24` — not one of those three. That site is a different loop: it hashes
+`w27` bytes from `x25 + ((x22 ^ w0) % w19)`, i.e. a table entry located by hash, and it ran off the end
+of that table the same way (`SEGV_ACCERR` on a page boundary).
+
+### Why this is not a bypass
+
+- Every fix reveals the next, and the third site has no length field to correct — it is the table walk
+  itself that is out of range. The descriptors are not self-consistent, so the validators cannot all
+  be satisfied by patching their loops.
+- The VM's input is not damaged by patching. `com.pairip.VmDecryptor.decrypt` is a no-op
+  (`return-object v1`), so `VMRunner` executes the raw `assets/<name>` entry it reads from `base.apk`
+  with `ZipFile`. Those entries are byte-identical between the reference `base.apk` and the patched
+  build (20 compared, same sizes and content), and the manifest/asset names are unchanged.
+- The check is not gated on the Java stub either. `LicenseClient.checkLicense(context)` was patched to
+  `return-void` in `classes2.dex` and the build was reinstalled: unchanged, still SIGSEGV at
+  `0x330c4`. The licence flow is also entered from `LicenseContentProvider.onCreate` (a manifest
+  provider) and `Application.attachBaseContext`, both ahead of Tandem's own code.
+- Timeline of a launch: process starts, `net.tandem.ui.MainActivity` is created, the paywall `START`
+  intent (`store/license/paywall?id=net.tandem`) is sent at +2.1 s, and the crash lands 30 ms later.
+  The startup program does execute; what follows does not.
+
+So the three sites are the verifier's own arithmetic, not a tripwire that can be skipped: the data they
+verify cannot be reconstructed from a re-signed APK. Making the app run needs either a licence response
+the native verifier accepts (Play-signed) or a PairIP-free build — not another instruction patch.
+
 ## What this means
 
 - The clone mechanics work: new application id, installs beside the official app, no provider or
@@ -138,13 +202,45 @@ byte-for-byte unchanged.
 
 ## Next
 
-1. Neutralise the checks inside `libpairipcore.so` itself — the SIGSEGV at offset `0x330c4` is the
-   place to start — or find a Tandem build without PairIP, then repeat this test unchanged. Morphe's
-   dex and manifest patches cannot reach it.
+1. Stop trying to patch around the crash. Three sequential faults were fixed on hardware
+   (`0x330c4` → `0x5fd9c` → `0x50c24`) and each one only revealed the next, because the descriptors
+   the native verifier is fed do not match a re-signed build. The workable routes are a Tandem
+   release without PairIP, or a licence response the native verifier accepts.
 2. Once a run survives launch, walk the app: sign-in, conversation list, a message, a call, then the
    patch-specific effects.
 3. Compare against a **Play-installed** official app; sideloading the stock APK trips the same gate, so
    it is not a usable baseline.
+
+## 6.12.0 — the same gate, a different message
+
+6.12.0 (versionCode 11503) was tried as a way around the launch failure above, because older Tandem
+builds are what still run for most people. It is **not** one. Measured on the reference APKM, split
+like the 6.38.0 one:
+
+| | 6.38.0 | 6.12.0 |
+| :--- | :--- | :--- |
+| Application class in the manifest | `com.pairip.application.Application` | the same |
+| PairIP components in the manifest | `LicenseActivity` | `LicenseActivity` and `LicenseContentProvider` (`net.tandem.com.pairip.licensecheck.LicenseContentProvider`) |
+| `lib/arm64-v8a/libpairipcore.so` | present | present, 527,472 bytes |
+| Licence entry points | `LicenseClient.checkLicense(Context)`, `startPaywallActivity`, `startErrorDialogActivity`, `scheduleAppShutdown` | `LicenseClient.connectToLicensingService()`, `checkLicenseInternal(IBinder)`, `LicenseActivity.showPaywallAndCloseApp()`, `showErrorDialog()` |
+| Signature gate | `SignatureCheck.verifyIntegrity(Context)` | the same |
+
+So a re-signed 6.12.0 is subject to the same signature and licence checks, and it ships the native
+core that produced the SIGSEGV above.
+
+**"Please update … from the Google Play store" is Tandem's own dialog, not Play's licensing.** The
+text is `string/Error.UpgradeMessage` — "Please update to the latest version of Tandem from the
+Google Play store. We've improved the chat experience …" (`0x7f130458` in 6.38.0, `0x7f130421` in
+6.12.0; 6.12.0 also carries `string/OutdatedAppText` with the App Store wording). A literal-constant
+scan of all five dex files in each base APK found no method that loads either id, and no dex string
+references the resource by name — so the code that raises that dialog is not in the dex the
+patches rewrite, which is why emptying the licence methods behind it does not remove it.
+
+What the bundle does about 6.12.0 is only declared support: `v1.1.1` applies all five patches to
+both reference APKMs (five applied, zero failed, `--validate` on), with the anchors that moved
+between the builds matched by something stable. That is an "applies" result, not a "runs on a
+device" result — 6.12.0 has not been installed yet, and nothing above suggests it would behave
+differently from 6.38.0.
 
 ## Note on the official copy
 

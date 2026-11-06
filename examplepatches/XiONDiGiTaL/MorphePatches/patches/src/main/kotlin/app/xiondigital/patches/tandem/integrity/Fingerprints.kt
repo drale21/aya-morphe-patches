@@ -90,3 +90,34 @@ internal object PairIpLicenseActivityStartFingerprint : Fingerprint(
     returnType = "V",
     parameters = emptyList(),
 )
+
+/**
+ * `com.pairip.licensecheck.LicenseClient.connectToLicensingService()` — the 6.12.0 licence entry.
+ *
+ * 6.12.0's PairIP has no `checkLicense(Context)`: the client is an instance built with
+ * `LicenseClient(Context)` and this is the method that binds Play's licensing service from it. Same
+ * purpose as `checkLicense` in 6.38.0, so it gets the same no-op treatment. Optional: the newer
+ * build does not declare it.
+ */
+internal object PairIpLicenseServiceConnectFingerprint : Fingerprint(
+    definingClass = "Lcom/pairip/licensecheck/LicenseClient;",
+    name = "connectToLicensingService",
+    accessFlags = listOf(AccessFlags.PRIVATE),
+    returnType = "V",
+    parameters = emptyList(),
+)
+
+/**
+ * `com.pairip.licensecheck.LicenseActivity.showPaywallAndCloseApp()` — 6.12.0's paywall.
+ *
+ * The counterpart of 6.38.0's `LicenseClient.startPaywallActivity(PendingIntent)`, moved into the
+ * activity that shows it: it fires the store listing and closes the app. Optional, for the same
+ * reason as the fingerprint above.
+ */
+internal object PairIpLicensePaywallActivityFingerprint : Fingerprint(
+    definingClass = "Lcom/pairip/licensecheck/LicenseActivity;",
+    name = "showPaywallAndCloseApp",
+    accessFlags = listOf(AccessFlags.PRIVATE),
+    returnType = "V",
+    parameters = emptyList(),
+)

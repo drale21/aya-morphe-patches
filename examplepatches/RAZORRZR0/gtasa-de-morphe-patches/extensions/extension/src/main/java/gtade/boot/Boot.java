@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +19,8 @@ import java.util.List;
 /**
  * GameActivity's static init calls start() right after loadLibrary("UE4") (Mod loader patch).
  * The mod patches put their files in assets/gtade/{mods,configs,cleo}/. After each (re)patch this copies them to
- * Android/data/<game>/{mods,configs,cleo}, where AML and CLEO load them, then loads AML. An existing .ini is kept: it holds
- * the user's settings; only [sections] it lacks are appended from the new one. With the Rubbish-DE patch it also builds
+ * Android/data/<game>/{mods,configs,cleo}, where AML and CLEO load them, then loads AML. An existing .ini is rebuilt from
+ * the new one with the user's values kept (mergeIni), so renamed or removed settings never leave stale keys or labels. With the Rubbish-DE patch it also builds
  * that mod's model pak into paks/ from the game's own data (RubbishPak). Mod libraries and paks from an earlier patch
  * that are no longer included are deleted.
  */
@@ -63,7 +62,11 @@ public final class Boot {
                 File dst = new File(root, path);
                 if (dir.equals("mods")) now.add(path);
                 if (n.endsWith(".ini") && dst.exists()) {
-                    appendNewSections(assets, "gtade/" + path, dst);
+                    String user = readFile(dst), merged = mergeIni(user, readAsset(assets, "gtade/" + path));
+                    if (!merged.equals(user)) {
+                        writeAtomic(dst, merged.getBytes(StandardCharsets.UTF_8));
+                        Log.i(TAG, "updated settings in " + path);
+                    }
                     continue;
                 }
                 dst.getParentFile().mkdirs();
@@ -114,29 +117,62 @@ public final class Boot {
         }
     }
 
-    // Appends each [section] block of the bundled ini whose header line the user's ini does not have.
-    private static void appendNewSections(AssetManager assets, String asset, File dst) throws Exception {
-        List<String> headers = new ArrayList<>();
-        boolean endsWithNewline = true;
-        try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(dst), StandardCharsets.UTF_8))) {
-            for (String l; (l = r.readLine()) != null; ) if (l.trim().startsWith("[")) headers.add(l.trim());
+    private static String readFile(File f) throws IOException {
+        try (InputStream in = new FileInputStream(f)) {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[1 << 16];
+            for (int k; (k = in.read(buf)) > 0; ) out.write(buf, 0, k);
+            return out.toString("UTF-8");
         }
-        try (RandomAccessFile f = new RandomAccessFile(dst, "r")) {
-            if (f.length() > 0) { f.seek(f.length() - 1); endsWithNewline = f.read() == '\n'; }
+    }
+
+    private static void writeAtomic(File dst, byte[] data) throws IOException {
+        File tmp = new File(dst.getPath() + ".tmp");
+        try (FileOutputStream out = new FileOutputStream(tmp)) {
+            out.write(data);
+            out.getFD().sync();
         }
-        StringBuilder add = new StringBuilder();
-        boolean copying = false;
-        try (BufferedReader r = new BufferedReader(new InputStreamReader(assets.open(asset), StandardCharsets.UTF_8))) {
-            for (String l; (l = r.readLine()) != null; ) {
-                String t = l.trim();
-                if (t.startsWith("[")) copying = !headers.contains(t);
-                if (copying) add.append(l).append('\n');
+        if (!tmp.renameTo(dst)) throw new IOException("cannot write " + dst);
+    }
+
+    /**
+     * The bundled ini (current keys, comments and labels) with the user's value for every key it still has. User
+     * sections the bundled ini does not have (their own additions) are kept at the end; keys it dropped are removed.
+     */
+    static String mergeIni(String user, String bundled) {
+        java.util.Map<String, String> values = new java.util.HashMap<>();
+        java.util.Map<String, StringBuilder> sections = new java.util.LinkedHashMap<>();
+        String section = "";
+        for (String l : user.split("\n", -1)) {
+            String t = l.trim();
+            if (t.startsWith("[")) {
+                section = t;
+                if (!sections.containsKey(t)) sections.put(t, new StringBuilder());
             }
+            if (sections.containsKey(section)) sections.get(section).append(l).append('\n');
+            int eq = t.indexOf('=');
+            if (eq > 0 && !t.startsWith(";") && !t.startsWith("#"))
+                values.put(section + "\n" + t.substring(0, eq).trim(), t.substring(eq + 1).trim());
         }
-        if (add.length() == 0) return;
-        try (OutputStream out = new FileOutputStream(dst, true)) {
-            out.write(((endsWithNewline ? "\n" : "\n\n") + add).getBytes(StandardCharsets.UTF_8));
+        StringBuilder out = new StringBuilder();
+        section = "";
+        String[] lines = bundled.split("\n", -1);
+        for (int i = 0; i < lines.length; i++) {
+            String l = lines[i], t = l.trim();
+            if (t.startsWith("[")) {
+                section = t;
+                sections.remove(t);
+            }
+            int eq = l.indexOf('=');
+            String v = eq > 0 && !t.startsWith(";") && !t.startsWith("#")
+                    ? values.get(section + "\n" + l.substring(0, eq).trim()) : null;
+            out.append(v != null ? l.substring(0, eq + 1) + v : l);
+            if (i < lines.length - 1) out.append('\n');
         }
-        Log.i(TAG, "added new settings to " + dst.getName());
+        for (StringBuilder s : sections.values()) {
+            while (out.length() > 0 && Character.isWhitespace(out.charAt(out.length() - 1))) out.setLength(out.length() - 1);
+            out.append("\n\n").append(s.toString().replaceAll("\\s+$", "")).append('\n');
+        }
+        return out.toString();
     }
 }

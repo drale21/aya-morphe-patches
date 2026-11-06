@@ -33,7 +33,7 @@ No PC and no root needed. The mods are built in
 > Morphe Manager shows the patches as new: check your selection once before patching.
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.2.2](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/releases/tag/v1.2.2)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;8 patches total
+> **[v1.2.3](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/releases/tag/v1.2.3)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;8 patches total
 <details open>
 <summary>📦 GTA: SA&nbsp;&nbsp;•&nbsp;&nbsp;8 patches</summary>
 <br>

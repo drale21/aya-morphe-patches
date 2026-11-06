@@ -372,3 +372,78 @@ Push, tag e release são ações externas: chamar `confirm` com a ação exata a
 - O conteúdo em branco de Movimento pode ser um problema independente de layout/preferência,
   não apenas de acessibilidade.
 - Não voltar a tentar `CertInstaller` ou qualquer instalação de certificado no DiLink.
+
+## Sessão 2026-11-05 (continuação) — 1.0.9 no carro
+
+- ADB do carro via Tailscale (`100.74.124.38:5555`) funcionou.
+- **O app abre e navega no DiLink** (home renderiza em landscape, API 29).
+- Correções de startup na fonte (mpp, versão 1.0.9):
+  - `x2/V.<init>(WindowInsets)`: a injeção anterior caía em código inalcançável; agora é
+    injetada após `Object.<init>` e escolhe `V$e` (API < 30), `V$i` (30–33) e o caminho
+    original `V$j` (≥ 34).
+  - `androidx.mediarouter.app.c.<init>`: forçar `isInEditMode()=true` só em API < 30; em
+    API ≥ 30 isso deixava `mRouter` null e o `onAttachedToWindow` dava NPE.
+- **Login bloqueado (não é o patch)**: `anisetteRequest(-1) failed` +
+  `R8.b code=-45061` no `foothill`/ADI nativo.
+  - Reproduzido no carro (API 29) e no S24 (API 36), com e sem o bypass de integrity.
+  - Controle: APK original **sem patch, apenas re-assinado**, falha igual no S24; o app
+    original instalado pela Play Store loga normalmente.
+  - Conclusão: o re-sign quebra o atestado (Play Integrity/FairPlay ADI). Login em APK
+    patcheado provavelmente exige bypass de atestação server-side — não resolvido.
+
+## Sessão 2026-11-05 (login, continuação)
+
+Progresso concreto (tudo na fonte/mpp):
+
+- **JS da Apple no WebView 74**: `assets/index.js` e os chunks `appleauth` usam ES2020
+  (`?.`, `??`), que o Chromium 74 não parseia. Foi criado `tools/fetch_assets.js` +
+  `tools/assemble_assets.js` + esbuild (`tools/transpile_assets.js`), o blob
+  `assets/transpiled_assets.bin` é publicado no repo e embutido em
+  `res/raw/js_ams_adaptor.js` por `DilinkWebAssetsPatch`; `PlatformCompat.interceptWebResource`
+  serve os assets transpilados em `shouldInterceptRequest`.
+- **Anisette**: `PlatformCompat.applyAnisetteHeaders` injeta headers v3 do servidor
+  `ani.sidestore.io` no interceptor de StoreAPI (`tb.a.a`); `remoteOtpResponse` substitui o
+  `IAnisetteProvider.request` (classe dex `Le7/d;`, método `request-4PLdz1A`). O provider
+  nativo (`Le7/k`) também foi substituído (`request`, `startProvisioning`, `synchronize`,
+  `finishProvisioning`, `eraseProvisioning`, `dispose`), com `Expected` construído por reflexão.
+- **API 30 extra**: `IBinder.getSuggestedMaxIpcSizeBytes()` (p507z3.C7059k) redirecionado.
+- **Resultado**: e-mail/senha e **2FA são aceitos no S24** (código 324808 validado);
+  o passo final `AMSIDMSAuthenticationCompleteAction` (commerce auth, **Anisette V1.5/AMD**)
+  ainda falha com `commerceAuthenticationFailed` e apaga o provisionamento. O ADI nativo
+  retorna `-45061` em qualquer build re-assinado; semear `adi.pb` do iTunes Windows não
+  resolveu (identidade ligada ao keychain do Windows).
+- Apple Music da MS Store usa **PlayReady**, não gera `adi.pb`.
+- **`libCoreADI.so` importa apenas `libc`/`libdl`** (sem JNI, PackageManager, rede ou SSL):
+  `open/lstat/fstat/read/write/mkdir/__system_property_get/gettimeofday`. Logo o `-45061` é
+  estado local (arquivos/propriedades), não uma checagem de assinatura via Java. A hipótese
+  mais forte agora é que o **provisionamento nunca completa** (o intercâmbio com a Apple é feito
+  pelo StoreApi, fora da lib), possivelmente por falta de token de integrity válido.
+- Substituto do provider levado ao limite: `Le7/d.request-4PLdz1A`, `provisioning`,
+  `synchronize`, `eraseProvisioning` e o provider nativo `Le7/k` (`request`, `start`, `finish`,
+  `sync`, `erase`, `dispose`) foram trocados por respostas nossas. `remoteOtpResponse` funciona
+  até para `dsid=-2`; falsificar `startProvisioning`/`synchronize` faz o fluxo cair em
+  “Ocorreu um problema ao conectar com o servidor” antes do 2FA — ou seja, o AMSCore precisa de
+  dados reais de provisionamento, não de um `Success` vazio.
+- Automação de UI por **CDP** (`tools/cdp_login.js`, `tools/cdp_watch.js`, `tools/cdp_eval.js`)
+  tornou o login reproduzível no S24 (preencher campos e clicar em “Continuar”/“Iniciar sessão”).
+- Próximo: RE do `libCoreADI` para achar o caminho do `-45061` e/ou uma fonte Anisette V1.5/AMD
+  que aceite o provisionamento sem o ADI nativo.
+
+## Sessão 2026-11-05 (resolvido) — login + playback no DiLink
+
+- A pesquisa pública corrigiu o diagnóstico: `-45061` é `kADINotProvisioned` (estado), não assinatura.
+  O `INativeAnisetteProvider` foi substituído por OTP local, sem `libCoreADI`.
+- Identidade Android provisionada com `apple-auth` (MIT), driver em `.pipeline/apple-auth`:
+  GrandSlam (`device-android-1`, secondary 384 B, profile −2) e Store (`device-android-store`,
+  secondary 272 B, profile −1). Port Java do OTP em `extensions/.../adi/{AmdOtp,StoreOtp,Tables,StoreTables}.java`,
+  perfis em `AdiProfile.java`/`StoreProfile.java` (gerados por `tools/gen_adi_profiles.py`).
+- Provider devolve **OTP cru**: GrandSlam com envelope de 28 B (v5 + trailer 4) e Store com AMD de
+  24 B (v4, sem trailer); machine ID de 60 B.
+- `Surface.setFrameRate` (API 30, ExoPlayer) redirecionado — era o crash no playback após o login.
+- Resultado: conta ativa no S24 e no carro (`AccountTable.json`, DSID 1123805986) e **player
+  tocando** no DiLink; UI de letras, fila, busca e Ajustes navegáveis.
+- Pendências: layout em API 29 (faixa preta nas letras, cards cortados à direita, gaps no Ajustes).
+- Release 1.1.0: `.mpp` (entrada XAPK; APKM rejeitado pelo `apkFileType = XAPK`) e APK merged
+  `AppleMusic-1.1.0-DiLink.apk` para instalação manual.
+
+

@@ -40,6 +40,11 @@ import app.xiondigital.patches.tandem.shared.replaceBodyWithReturnVoid
  * PairIP's method-level protection (`VMRunner`, `StartupLauncher`) is deliberately left intact, so
  * the classes it decrypts at runtime are still loaded normally.
  *
+ * The same flow exists in 6.12.0 under different names — `LicenseClient.connectToLicensingService()`
+ * connects the client, `LicenseClient.checkLicenseInternal(IBinder)` handles the response and
+ * `LicenseActivity.showPaywallAndCloseApp()` is what puts Play's listing on screen — so those are
+ * emptied too when a build declares them.
+ *
  * A device test on 2026-11-04 showed these stubs are not enough on their own: the launch still
  * reaches Play's licence paywall and dies inside `libpairipcore.so`. See
  * `Tandem/DEVICE-TEST.md` for the measurement, including the attempts that were tried and did not
@@ -55,16 +60,27 @@ val bypassPairIpPatch = bytecodePatch(
     compatibleWith(COMPATIBILITY_TANDEM_APK, COMPATIBILITY_TANDEM_APKM)
 
     execute {
+        // Present in both inspected builds, so these two have to match. The signature gate is what
+        // kills a re-signed APK outright; the activity is the one screen the licence flow can put
+        // in front of the user.
+        PairIpVerifyIntegrityFingerprint.method.replaceBodyWithReturnVoid()
+        PairIpLicenseActivityStartFingerprint.method.replaceBodyWithFinish()
+
+        // The licence plumbing is not stable across PairIP versions: 6.38.0 has
+        // `checkLicense(Context)`, `startPaywallActivity`, `startErrorDialogActivity` and
+        // `scheduleAppShutdown`, while 6.12.0 has `connectToLicensingService()` and
+        // `showPaywallAndCloseApp()` instead. Each one is emptied when the build still declares it
+        // and skipped when it does not, so one bundle covers both builds without either of them
+        // failing on a method the other one renamed.
         listOf(
-            PairIpVerifyIntegrityFingerprint,
             PairIpLicenseCheckFingerprint,
             PairIpLicensePaywallFingerprint,
             PairIpLicenseErrorDialogFingerprint,
             PairIpLicenseShutdownFingerprint,
+            PairIpLicenseServiceConnectFingerprint,
+            PairIpLicensePaywallActivityFingerprint,
         ).forEach { fingerprint ->
-            fingerprint.method.replaceBodyWithReturnVoid()
+            fingerprint.methodOrNull?.replaceBodyWithReturnVoid()
         }
-
-        PairIpLicenseActivityStartFingerprint.method.replaceBodyWithFinish()
     }
 }

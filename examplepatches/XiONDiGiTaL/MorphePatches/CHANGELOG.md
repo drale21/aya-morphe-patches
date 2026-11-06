@@ -1,3 +1,9 @@
+## [1.1.1](https://github.com/XiONDiGiTaL/MorphePatches/compare/v1.1.0...v1.1.1) (2026-11-06)
+
+### 🚀 Updated App Support
+
+* **tandem:** support Tandem 6.12.0 alongside 6.38.0 ([7df07ac](https://github.com/XiONDiGiTaL/MorphePatches/commit/7df07acfaf39adec55dfd3f0ed4a5035c5dc661a))
+
 ## [1.1.0](https://github.com/XiONDiGiTaL/MorphePatches/compare/v1.0.2...v1.1.0) (2026-11-04)
 
 ### ✨ New Features

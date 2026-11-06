@@ -4,7 +4,7 @@ Patches for **Tandem: Language exchange** (`net.tandem`) by XiONDiGiTaL, built f
 [Morphe](https://morphe.software).
 
 The patches ship compiled in this folder: **[`patches.mpp`](patches.mpp)**, and as the `v1.1.0`
-release asset. Import either file in Morphe Manager and patch a stock Tandem 6.38.0 APK or APKM —
+release asset. Import either file in Morphe Manager and patch a stock Tandem **6.38.0** or **6.12.0** APK or APKM —
 nothing else is needed, and no build step is required to use it.
 
 Adding `XiONDiGiTaL/MorphePatches` as a source
@@ -21,10 +21,10 @@ review — live in a separate offline app, [Tandem Study](../companion/README.md
 | Bundle | [`patches.mpp`](patches.mpp) — 74,124 bytes (the same build as the release asset) |
 | SHA-256 | `0034159ee9a8ba74d7f540f2ca48f5c57cf4d805f68639da575d991e1f5f2af9` (both files) |
 | Contents | 5 patches: Force dark mode, Bypass PairIP checks, Remove ads, Disable Adjust tracking, Clone package |
-| Target | Tandem **6.38.0** (versionCode **11568**), `net.tandem`, minSdk 32, targetSdk 37 |
+| Target | `net.tandem` — Tandem **6.38.0** (versionCode **11568**, minSdk 32) and **6.12.0** (versionCode **11503**, minSdk 26; the bundle needs API 31) |
 | Patcher | Morphe patcher **2.1.0** (the bundle declares `Patcher-Version: 2.1.0`) |
 | Format | APK and APKM (compatibility entries for both) |
-| Status | **Experimental** — applies to the real 6.38.0 APKM and the patched dex is verified; the first device test installs the clone but is stopped by Tandem's licence gate at launch ([DEVICE-TEST.md](DEVICE-TEST.md)) |
+| Status | **Experimental** — applies to the real 6.38.0 and 6.12.0 APKMs and the patched dex is verified; the first device test installs the clone but is stopped by Tandem's licence gate at launch ([DEVICE-TEST.md](DEVICE-TEST.md)) |
 
 Verify the download before importing:
 
@@ -140,9 +140,15 @@ in the patched build, launching still opens Play's licence paywall
 (`store/license/paywall?id=net.tandem`) and the process then dies with SIGSEGV inside
 `libpairipcore.so` — enforcement runs below the layer this patch edits. An unpatched sideloaded copy of
 the same APK behaves the same way, so the gate is the app's protection rather than the patches.
-Unwrapping PairIP's application class and disabling Play were both tried on the device; neither
-changed the outcome — Tandem's own startup loads `libpairipcore.so` from `VMRunner`, and the native
-check kills the process. Details in [DEVICE-TEST.md](DEVICE-TEST.md).
+Unwrapping PairIP's application class, disabling Play, and stubbing `checkLicense` itself were all
+tried on the device; none changed the outcome.
+
+Patching the library does not rescue it either. The first crash is at `0x330c4`, where a range length
+is loaded with `ldrsh`, goes negative for lengths over 32,767 and walks 1.5 MB past its buffer; fixing
+that length load merely moves the crash to a second copy of the same hash loop (`0x5fd9c`), and fixing
+all three such loads moves it to a table walk at `0x50c24`. Each repair reveals the next fault, because
+the data the verifier is handed cannot be reconstructed from a re-signed APK. A run therefore needs a
+PairIP-free build, not another instruction patch. Details in [DEVICE-TEST.md](DEVICE-TEST.md).
 
 **Not touched.** PairIP's method-level protection (`VMRunner`, `StartupLauncher`) stays active, so the
 classes it decrypts at runtime still load. That runtime is why the licence activity is closed rather
@@ -289,13 +295,26 @@ local data is not migrated, and there is no supported way to copy it across with
 
 ## Compatibility
 
-Only 6.38.0 is declared, so Morphe refuses the bundle on any other version instead of silently
+Two builds are declared, so Morphe refuses the bundle on any other version instead of silently
 patching it. Adding a version is a claim that the fingerprints and the injected code were verified
 against that exact build.
 
-Reference file: APKMirror universal bundle
-`sha256 17539cc675654353e5971a8fd2bea6384876c71f63b387f8d95ef6cf7502e3ca` (`base.apk`
-`sha256 940797a624210ba555fc0e67e9b7ce9456c4dd811450d4e973ac716ee721942b`).
+| Build | versionCode | minSdk | Reference APKM (universal bundle) |
+| :--- | :--- | :--- | :--- |
+| 6.38.0 | 11568 | 32 | `sha256 17539cc675654353e5971a8fd2bea6384876c71f63b387f8d95ef6cf7502e3ca`, `base.apk` `sha256 940797a624210ba555fc0e67e9b7ce9456c4dd811450d4e973ac716ee721942b` |
+| 6.12.0 | 11503 | 26 (31 with the dark-mode patch) | `sha256 f3838444ab06fa5d14adaa43a3725c20f4b48f8247d8f7c5874e55a1f88e8e0f`, `base.apk` `sha256 7ea914f077c8e727ebacc4e14445aba3dcd4af58236fe3797084992363c4fcda` |
+
+The two builds do not agree on every anchor, and the differences are handled where they occur:
+
+| What | 6.38.0 | 6.12.0 | How it is matched |
+| :--- | :--- | :--- | :--- |
+| Community-ad composable | `Ljhp;->a(Lex4;Lf79;Lpw4;Leh;Lbg5;I)V` | `Lcl3;->a(…CommunityCard$BannerAd;Lpy6;Lik3;Lrc;Lp14;I)V` | by the `"communityAd"` tag it assigns — one method per build |
+| `TandemApp.onCreate()` | references `"coroutineScope"` | different body, no such string | by class, name, visibility and empty parameters |
+| Licence entry | `checkLicense(Context)`, `startPaywallActivity(PendingIntent)`, `startErrorDialogActivity()`, `scheduleAppShutdown()` | `connectToLicensingService()`, `showPaywallAndCloseApp()` | per method, applied only where the build declares it |
+
+6.12.0 is **not** a way around the Play licence gate: it ships the same PairIP application class,
+the same `com.pairip.licensecheck` components and its own `libpairipcore.so`, so it is subject to
+the same native check described in [DEVICE-TEST.md](DEVICE-TEST.md).
 
 ## Testing status
 
@@ -306,6 +325,8 @@ Reference file: APKMirror universal bundle
 | Bundle loads via Morphe's `loadPatchesFromJar` | Pass |
 | Metadata identifies `net.tandem`, 6.38.0, minSdk 32 | Pass |
 | Bundle applies to the APKMirror 6.38.0 APKM (fingerprint match + dex assembly) | Pass — all five patches complete; 20 classes rewritten |
+| Bundle applies to the APKMirror 6.12.0 APKM | Pass — applied with Morphe's patcher, five patches, zero failures, `--validate` on |
+| Patched 6.12.0 dex contains the intended changes | Pass — `verifyIntegrity`, `connectToLicensingService`, `showPaywallAndCloseApp`, `initSdk` and `Lcl3;->a` are a single `return-void`; `LicenseActivity.onStart()` is `finish()`; `TandemApp.onCreate()` gained the night-mode call |
 | Every patch applies in CI on each push | [`patch-regression.yml`](../.github/workflows/patch-regression.yml), against the pinned reference APKM — including the opt-in clone patch, whose result is checked for the clone's id in the manifest |
 | Clone package renames the installed app | Pass — applied to the reference APKM and the result decompiled: `package="app.xiondigital.tandem"`, all nine authorities, the signature permission and `WXEntryActivity`'s task affinity renamed, and all ten dex literals rewritten |
 | Package name option takes a custom id | Pass — patched with `packageName=dev.xion.tandem` and the manifest and all ten literals followed it |
@@ -387,6 +408,25 @@ Without the variable the job still builds the bundle and reports the apply step 
 also what happens on pull requests from forks, where the token is not available.
 
 ## Changelog
+
+### 1.1.1 — 2026-11-06
+
+Tandem **6.12.0** (versionCode 11503) is now a declared target, so the bundle patches that build
+instead of refusing it.
+
+- Anchors that move between builds are matched by something stable instead of by a descriptor that
+  only holds in one release: the community-ad composable by its `"communityAd"` tag (its R8 name and
+  parameter types differ per build), `TandemApp.onCreate()` by class, name, visibility and empty
+  parameter list (_6.12.0's body does not contain the `"coroutineScope"` string 6.38.0's does_), and
+  PairIP's licence plumbing per method — `checkLicense`/`startPaywallActivity`/
+  `startErrorDialogActivity`/`scheduleAppShutdown` in 6.38.0, `connectToLicensingService`/
+  `showPaywallAndCloseApp` in 6.12.0 — each applied only where the build still declares it.
+- `TandemApp.onCreate()` declares 12 registers and takes no parameters in both builds, so the
+  night-mode injection's `v0`/`v1` scratch registers are free in either.
+- 6.12.0's target declares minSdk 31 rather than the APK's own 26, because the dark-mode patch
+  (on by default) calls `UiModeManager.setApplicationNightMode`, which exists from API 31.
+- Verified by applying the built bundle with Morphe's patcher to both reference APKMs — five patches,
+  zero failures, `--validate` on — and by reading the patched 6.12.0 dex back.
 
 ### 1.1.0 — 2026-11-04
 

@@ -1,3 +1,9 @@
+## [1.2.3](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/compare/v1.2.2...v1.2.3) (2026-11-05)
+
+### 🐛 Bug Fixes
+
+* settings files update with each patch, so renamed or removed settings no longer show stale labels (FSR showed 30 FPS) ([381a5b8](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/commit/381a5b8570c7607cf39a26667f5507313dde82b6))
+
 ## [1.2.2](https://github.com/RAZORRZR0/gtasa-de-morphe-patches/compare/v1.2.1...v1.2.2) (2026-11-05)
 
 ### 🐛 Bug Fixes
