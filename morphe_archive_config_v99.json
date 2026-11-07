@@ -3835,14 +3835,6 @@
                 "updatedAt": 1793428177630
             },
             {
-                "name": "instagram-custom-branding-patches",
-                "source": "https://raw.githubusercontent.com/yashsehrawatdelete550-dotg/instagram-custom-branding-patches/main/patches-bundle.json",
-                "autoUpdate": true,
-                "sortOrder": 540,
-                "createdAt": 1793428178043,
-                "updatedAt": 1793428178043
-            },
-            {
                 "name": "drtv-morphe-patches",
                 "source": "https://raw.githubusercontent.com/zenthora/drtv-morphe-patches/main/patches-bundle.json",
                 "autoUpdate": true,
@@ -4081,14 +4073,6 @@
                 "sortOrder": 571,
                 "createdAt": 1793824822673,
                 "updatedAt": 1793824822673
-            },
-            {
-                "name": "Pixel-Camera",
-                "source": "https://raw.githubusercontent.com/Akshayykadam/Pixel-Camera/main/patches-bundle.json",
-                "autoUpdate": true,
-                "sortOrder": 572,
-                "createdAt": 1793824823503,
-                "updatedAt": 1793824823503
             },
             {
                 "name": "AppleMusic-DiLink",
@@ -4419,14 +4403,6 @@
                 "updatedAt": 1793824882427
             },
             {
-                "name": "bakalari-morphe",
-                "source": "https://raw.githubusercontent.com/voznyiarsen/bakalari-morphe/main/patches-bundle.json",
-                "autoUpdate": true,
-                "sortOrder": 615,
-                "createdAt": 1793824884028,
-                "updatedAt": 1793824884028
-            },
-            {
                 "name": "instagram-patches",
                 "source": "https://raw.githubusercontent.com/warleysr/instagram-patches/main/patches-bundle.json",
                 "autoUpdate": true,
@@ -4529,14 +4505,6 @@
                 "sortOrder": 628,
                 "createdAt": 1793856852508,
                 "updatedAt": 1793856852508
-            },
-            {
-                "name": "morphe-bilibili-danmaku",
-                "source": "https://raw.githubusercontent.com/RizkLee/morphe-bilibili-danmaku/master/patches-bundle.json",
-                "autoUpdate": true,
-                "sortOrder": 629,
-                "createdAt": 1793856853568,
-                "updatedAt": 1793856853568
             },
             {
                 "name": "morphe-patche",
@@ -4649,6 +4617,62 @@
                 "sortOrder": 643,
                 "createdAt": 1793942805212,
                 "updatedAt": 1793942805212
+            },
+            {
+                "name": "apple-music-android-freedom",
+                "source": "https://raw.githubusercontent.com/andersonlucasg3/apple-music-android-freedom/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 644,
+                "createdAt": 1794027678603,
+                "updatedAt": 1794027678603
+            },
+            {
+                "name": "ayufa-youtube-patches",
+                "source": "https://raw.githubusercontent.com/Ayufa/ayufa-youtube-patches/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 645,
+                "createdAt": 1794027679480,
+                "updatedAt": 1794027679480
+            },
+            {
+                "name": "nicoid-re-patches",
+                "source": "https://raw.githubusercontent.com/chikuwadon/nicoid-re-patches/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 646,
+                "createdAt": 1794027680166,
+                "updatedAt": 1794027680166
+            },
+            {
+                "name": "TWRailway-patch",
+                "source": "https://raw.githubusercontent.com/GahahaWang/TWRailway-patch/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 647,
+                "createdAt": 1794027682375,
+                "updatedAt": 1794027682375
+            },
+            {
+                "name": "box_md_preview",
+                "source": "https://raw.githubusercontent.com/haya9924/box_md_preview/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 648,
+                "createdAt": 1794027683726,
+                "updatedAt": 1794027683726
+            },
+            {
+                "name": "carbridge-patches",
+                "source": "https://raw.githubusercontent.com/jmwerk/carbridge-patches/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 649,
+                "createdAt": 1794027685914,
+                "updatedAt": 1794027685914
+            },
+            {
+                "name": "Quwis-Patches",
+                "source": "https://raw.githubusercontent.com/salmanbappi/Quwis-Patches/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 650,
+                "createdAt": 1794027689771,
+                "updatedAt": 1794027689771
             }
         ]
     }
