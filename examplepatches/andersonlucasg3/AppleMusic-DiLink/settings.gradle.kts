@@ -20,7 +20,7 @@ pluginManagement {
 }
 
 plugins {
-    id("app.morphe.patches") version "1.3.3"
+    id("app.morphe.patches") version "2.1.0"
 }
 
 settings {
@@ -28,3 +28,13 @@ settings {
         defaultNamespace = "app.morphe.extension.applemusic"
     }
 }
+
+// UI-agnostic MediaBrowser client and domain models shared by the TV and car apps.
+include(":core")
+
+// Standalone Android TV client that talks to the patched Apple Music engine
+// through the framework MediaBrowser/MediaController API.
+include(":tv-app")
+
+// Touch-first client for the BYD DiLink head unit (and any touch device).
+include(":car-app")

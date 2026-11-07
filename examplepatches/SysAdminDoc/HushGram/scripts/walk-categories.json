@@ -242,6 +242,7 @@
           "Keep in chat",
           "Mark one-time photos and videos",
           "Swipe through a chat's reels",
+          "Swipe through a chat's photos and posts",
           "Chat history tools",
           "Preview chats",
           "Ask before a call",
@@ -502,7 +503,8 @@
           "Hide Notes on profile pictures",
           "Hide profile tabs",
           "Saved on your profile",
-          "Profile posts as a list"
+          "Profile posts as a list",
+          "Jump a profile's posts to a date"
         ]
       },
       "anchors": [

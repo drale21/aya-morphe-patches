@@ -8,6 +8,7 @@
  * - anddea (https://github.com/anddea)
  *
  * Licensed under the GNU General Public License v3.0.
+ * Modified by lavinhoque33, 2026-11-06.
  *
  * ------------------------------------------------------------------------
  * GPLv3 Section 7 – Additional Terms & Attribution Requirements
@@ -59,6 +60,8 @@ import app.morphe.patcher.checkCast
 import app.morphe.patcher.fieldAccess
 import app.morphe.patcher.literal
 import app.morphe.patcher.methodCall
+import app.morphe.patcher.string
+import app.morphe.patches.youtube.utils.extension.Constants.GENERAL_PATH
 import app.morphe.patcher.opcode
 import app.morphe.patches.shared.mapping.ResourceType.COLOR
 import app.morphe.patches.shared.mapping.getResourceId
@@ -77,6 +80,58 @@ internal const val UNKNOWN_STRING = "UNKNOWN"
 internal const val SEARCH_STRING = "SEARCH"
 internal const val TAB_ACTIVITY_STRING = "TAB_ACTIVITY"
 internal const val TAB_ACTIVITY_CAIRO_STRING = "TAB_ACTIVITY_CAIRO"
+
+/**
+ * The inset is stored as the extra bar height before it is used as bottom padding.
+ */
+internal object NavigationBarBottomPaddingFingerprint : Fingerprint(
+    filters = listOf(
+        fieldAccess(
+            opcode = Opcode.IPUT,
+            definingClass = YOUTUBE_PIVOT_BAR_CLASS_TYPE,
+            type = "I"
+        ),
+        methodCall(
+            opcode = Opcode.INVOKE_VIRTUAL,
+            definingClass = YOUTUBE_PIVOT_BAR_CLASS_TYPE,
+            parameters = listOf(),
+            returnType = "V",
+            location = MatchAfterImmediately()
+        ),
+        methodCall(
+            definingClass = YOUTUBE_PIVOT_BAR_CLASS_TYPE,
+            name = "setPadding",
+            location = MatchAfterWithin(10)
+        )
+    )
+)
+
+internal object NavigationBarBlurTintCallFingerprint : Fingerprint(
+    definingClass = YOUTUBE_PIVOT_BAR_CLASS_TYPE,
+    filters = listOf(
+        methodCall(smali = "Landroid/content/res/TypedArray;->getColor(II)I"),
+        opcode(Opcode.MOVE_RESULT, location = MatchAfterImmediately()),
+        methodCall(
+            opcode = Opcode.INVOKE_VIRTUAL,
+            parameters = listOf("I"),
+            returnType = "V",
+            location = MatchAfterImmediately()
+        ),
+        methodCall(
+            smali = "$YOUTUBE_PIVOT_BAR_CLASS_TYPE->setBackground(Landroid/graphics/drawable/Drawable;)V",
+            location = MatchAfterWithin(3)
+        )
+    )
+)
+
+internal object NavigationBarBlurTintFingerprint : Fingerprint(
+    returnType = "V",
+    parameters = listOf("I"),
+    filters = listOf(
+        methodCall(smali = "Landroid/graphics/Paint;->setColor(I)V"),
+        methodCall(smali = "Landroid/graphics/Paint;->setAlpha(I)V", location = MatchAfterWithin(4))
+    )
+)
 
 internal object AnimatedNavigationTabsFeatureFlagFingerprint : Fingerprint(
     accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.FINAL),
@@ -231,9 +286,11 @@ internal object TopBarRendererPrimaryFilterFingerprint : Fingerprint(
 )
 
 internal object SetEnumMapFingerprint : Fingerprint(
-    custom = { method, _ ->
-        method.containsLiteralInstruction(ytFillBell)
-    }
+    filters = listOf(
+        literal(ytFillBell),
+        methodCall(smali = "Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;", location = MatchAfterWithin(10)),
+        methodCall(smali = "Ljava/util/EnumMap;->put(Ljava/lang/Enum;Ljava/lang/Object;)Ljava/lang/Object;", location = MatchAfterWithin(10))
+    )
 )
 
 internal object SetEnumMapSecondaryFingerprint : Fingerprint(
@@ -296,4 +353,19 @@ internal object AutoHideNavigationBarFingerprint : Fingerprint(
         methodCall("Landroid/view/ViewConfiguration;->get(Landroid/content/Context;)Landroid/view/ViewConfiguration;"),
         methodCall("Landroid/view/ViewConfiguration;->getScaledTouchSlop()I", location = MatchAfterWithin(5))
     )
+)
+
+internal object WatchLaterIconEnumFingerprint : Fingerprint(
+    classFingerprint = ImageEnumConstructorFingerprint,
+    filters = listOf(
+        string("WATCH_LATER"),
+        opcode(Opcode.SPUT_OBJECT, location = MatchAfterWithin(5))
+    )
+)
+
+internal object WatchLaterPivotBarItemBuilderFingerprint : Fingerprint(
+    definingClass = "$GENERAL_PATH/NavigationButtonsPatch;",
+    name = "buildWatchLaterPivotBarItem",
+    returnType = "Ljava/lang/Object;",
+    parameters = listOf("[B")
 )

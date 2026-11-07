@@ -1,8 +1,8 @@
 {
-  "created_at": "2026-11-02T06:39:08",
-  "description": "## [1.9.1](https://github.com/ch3thanhs/stylus/compare/v1.9.0...v1.9.1) (2026-11-02)\n\n### 🐛 Bug Fixes\n\n* **bitwarden:** inject the font feature call with low registers ([594c859](https://github.com/ch3thanhs/stylus/commit/594c859328c18e5551adc91dc1484417b9d7af76))\n* **bitwarden:** use the real this register for the font feature call ([f67ac89](https://github.com/ch3thanhs/stylus/commit/f67ac89e72d53ce349e06aa1068482fe5dcc2f03))",
-  "download_url": "https://github.com/ch3thanhs/stylus/releases/download/v1.9.1/patches-1.9.1.mpp",
+  "created_at": "2026-11-07T03:28:16",
+  "description": "## [1.9.3](https://github.com/ch3thanhs/stylus/compare/v1.9.2...v1.9.3) (2026-11-07)\n\n### 🚀 Updated App Support\n\n* **GitHub:** Update app support to 1.283.0 ([47c0cad](https://github.com/ch3thanhs/stylus/commit/47c0cad082b4595a0c85c91c067c2224301de84a))\n* **Telegram web:** Update app support to 13.2.0 ([7630c33](https://github.com/ch3thanhs/stylus/commit/7630c336b67c0625372ce492c4dfcd0401563987))\n* **Telegram:** Update app support to 13.2.0 ([a7d54e9](https://github.com/ch3thanhs/stylus/commit/a7d54e9a59a6f18546824f7d04b40ba14e6bf092))",
+  "download_url": "https://github.com/ch3thanhs/stylus/releases/download/v1.9.3/patches-1.9.3.mpp",
   "signature_download_url": "",
-  "version": "1.9.1",
+  "version": "1.9.3",
   "public_key": "cWGf3WaVbkfbXxmHi+zYBAhD/stTunPUMpe/xsR7TdM="
 }

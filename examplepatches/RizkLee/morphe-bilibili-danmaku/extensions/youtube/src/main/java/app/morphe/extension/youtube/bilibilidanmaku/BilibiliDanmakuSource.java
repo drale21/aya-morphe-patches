@@ -552,7 +552,13 @@ final class BilibiliDanmakuSource {
 
     private synchronized String sign(Map<String, String> params) throws Exception {
         if (System.currentTimeMillis() >= keyExpiry) {
-            JSONObject image = json(API + "/x/web-interface/nav").getJSONObject("data").getJSONObject("wbi_img");
+            // The nav endpoint returns code -101 for visitors but still includes the WBI keys,
+            // so signing (and therefore search / video / danmaku requests) never requires a login.
+            JSONObject nav = new JSONObject(new String(fetch(API + "/x/web-interface/nav", 3 * 1024 * 1024),
+                    StandardCharsets.UTF_8));
+            JSONObject data = nav.optJSONObject("data");
+            JSONObject image = data == null ? null : data.optJSONObject("wbi_img");
+            if (image == null) throw new IOException("B 站接口错误 " + nav.optInt("code", -1) + "：无法获取签名密钥");
             imageKey = keyFromUrl(image.getString("img_url"));
             subKey = keyFromUrl(image.getString("sub_url"));
             keyExpiry = System.currentTimeMillis() + 4L * 60 * 60 * 1000;
@@ -596,20 +602,29 @@ final class BilibiliDanmakuSource {
         return hex.toString();
     }
 
+    /** Thrown when Bilibili requires a (valid) login for the requested content. */
+    static final class LoginRequiredException extends IOException {
+        LoginRequiredException(String message) { super(message); }
+    }
+
     private static JSONObject json(String url) throws Exception {
+        return json(url, true);
+    }
+
+    private static JSONObject json(String url, boolean mayRenew) throws Exception {
         String body = new String(fetch(url, 3 * 1024 * 1024), StandardCharsets.UTF_8);
         JSONObject json = new JSONObject(body);
         if (json.optInt("code", -1) != 0) {
             int code = json.optInt("code", -1);
-            if (code == -101) throw new IOException("B 站未登录（-101），请从弹幕菜单导入 SESSDATA");
+            if (code == -101) {
+                boolean stored = BilibiliDanmakuSession.hasSession();
+                // A QR login can renew itself; retry once with the rotated cookies.
+                if (mayRenew && stored && BilibiliDanmakuAuth.recoverSignedOut()) return json(url, false);
+                throw new LoginRequiredException(stored ? "B 站登录已失效，请重新登录" : "该内容需要登录 B 站账号");
+            }
             throw new IOException("B 站接口错误 " + code + "：" + json.optString("message", "未知错误"));
         }
         return json;
-    }
-
-    static boolean verifyLogin() throws Exception {
-        JSONObject data = json(API + "/x/web-interface/nav").getJSONObject("data");
-        return data.optBoolean("isLogin", false);
     }
 
     private static byte[] fetch(String url, int sizeLimit) throws IOException {

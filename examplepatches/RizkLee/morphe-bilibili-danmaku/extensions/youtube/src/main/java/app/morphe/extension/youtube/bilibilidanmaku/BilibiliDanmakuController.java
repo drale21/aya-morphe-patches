@@ -47,6 +47,8 @@ public final class BilibiliDanmakuController {
     private static String currentSourceTitle = "";
     private static String currentSourceCover = "";
     private static String status = "点击选择弹幕";
+    private static volatile boolean loginNeeded;
+    private static boolean loginHintShown;
     private static List<DanmakuComment> currentData = Collections.emptyList();
 
     private static long sampledVideoTimeMs = -1;
@@ -83,6 +85,7 @@ public final class BilibiliDanmakuController {
             rootRef = new WeakReference<>(overlayRoot);
             overlayRef = new WeakReference<>(layer);
             BilibiliDanmakuSession.initialize(overlayRoot.getContext());
+            BilibiliDanmakuAuth.maintainAsync(overlayRoot.getContext());
             layer.setComments(currentData);
             visible = PlayerType.getCurrent().isMaximizedOrFullscreen();
             setVideoState(VideoState.getCurrent());
@@ -110,6 +113,7 @@ public final class BilibiliDanmakuController {
             currentSourceTitle = "";
             currentSourceCover = "";
             currentData = Collections.emptyList();
+            loginNeeded = false;
             status = "当前视频尚未匹配";
             BilibiliDanmakuOverlayView overlay = overlayRef.get();
             if (overlay != null) overlay.clearComments();
@@ -185,7 +189,8 @@ public final class BilibiliDanmakuController {
         BilibiliDanmakuOverlayView overlay = overlayRef.get();
         if (overlay != null) {
             overlay.updateSettings(p.getInt("font", 19), p.getInt("opacity", 85), p.getInt("travel", 8),
-                    p.getInt("area", 75), p.getInt("max_len", 120), p.getBoolean("hide_color", false),
+                    p.getInt("area", 75), p.getInt("line_spacing", BilibiliDanmakuOverlayView.DEFAULT_LINE_SPACING),
+                    p.getInt("max_len", 120), p.getBoolean("hide_color", false),
                     p.getBoolean("hide_fixed", false), p.getString("keywords", ""),
                     p.getFloat("rate", 1f), p.getLong("offset_ms", 0));
             overlay.setActive(enabled && visible && !videoId.isEmpty());
@@ -197,6 +202,37 @@ public final class BilibiliDanmakuController {
         status = text;
         updateView();
         BilibiliDanmakuSheet.updateHeader();
+    }
+
+    static final int TONE_IDLE = 0, TONE_BUSY = 1, TONE_READY = 2, TONE_WARN = 3, TONE_ERROR = 4;
+
+    /** Colour of the status dot shown next to the status line in the menu. */
+    static int statusTone() {
+        String text = status;
+        if (loginNeeded) return TONE_WARN;
+        if (text.startsWith("已加载")) return TONE_READY;
+        if (text.startsWith("加载失败")) return TONE_ERROR;
+        if (text.startsWith("正在") || text.startsWith("搜索中") || text.startsWith("下载弹幕")
+                || text.startsWith("等待")) return TONE_BUSY;
+        if (text.equals("弹幕已关闭") || text.equals("点击选择弹幕") || text.equals("当前视频尚未匹配")) return TONE_IDLE;
+        return TONE_WARN;
+    }
+
+    /** Bilibili refused the last request because a (valid) login is required. */
+    static boolean needsLogin() { return loginNeeded; }
+
+    static int loadedCount() { return currentData.size(); }
+
+    /** After a successful login, retry the current video with the new credentials. */
+    static void reloadAfterLogin() {
+        boolean retry = loginNeeded;
+        loginNeeded = false;
+        Context context = appContext();
+        if (context == null || !prefs(context).getBoolean("enabled", false)) return;
+        if (retry || currentData.isEmpty()) {
+            startedForVideo = "";
+            maybeStart();
+        }
     }
 
     static ViewGroup playerRoot() { return rootRef.get(); }
@@ -298,6 +334,8 @@ public final class BilibiliDanmakuController {
         if (context == null || !visible || videoId.isEmpty() || !prefs(context).getBoolean("enabled", false)) return;
         if (videoId.equals(startedForVideo)) return;
         startedForVideo = videoId;
+        // Long-lived sessions: renew the login well before Bilibili retires it (throttled).
+        BilibiliDanmakuAuth.maintainAsync(context);
         String stored = prefs(context).getString("source_" + videoId, "");
         if ("xml".equals(stored)) loadSavedXml(context);
         else if (!stored.isEmpty()) loadVideoSource(context, stored);
@@ -324,9 +362,20 @@ public final class BilibiliDanmakuController {
             catch (Exception ex) {
                 MAIN.post(() -> {
                     if (ticket != generation) return;
+                    Context ctx = appContext();
+                    if (ex instanceof BilibiliDanmakuSource.LoginRequiredException) {
+                        // Not an error the user can fix by retrying: guide them to log in instead.
+                        loginNeeded = true;
+                        setStatus(ex.getMessage());
+                        BilibiliDanmakuSheet.loginRequired();
+                        if (ctx != null && !loginHintShown && !BilibiliDanmakuSheet.isShowing()) {
+                            loginHintShown = true;
+                            toast(ctx, "B 站弹幕：" + ex.getMessage() + "。点击播放器上的弹幕按钮即可扫码登录");
+                        }
+                        return;
+                    }
                     Logger.printException(() -> "Bilibili danmaku loading", ex);
                     setStatus("加载失败：" + ex.getMessage());
-                    Context ctx = appContext();
                     if (ctx != null) toast(ctx, "B站弹幕加载失败：" + ex.getMessage());
                 });
             }
@@ -475,11 +524,13 @@ public final class BilibiliDanmakuController {
         currentSource = source;
         currentSourceTitle = title;
         currentSourceCover = cover;
+        loginNeeded = false;
         BilibiliDanmakuOverlayView overlay = overlayRef.get();
         if (overlay != null) overlay.setComments(data);
-        setStatus("已加载 " + data.size() + " 条弹幕");
+        setStatus(String.format(java.util.Locale.ROOT, "已加载 %,d 条弹幕", data.size()));
         Context context = appContext();
-        if (context != null) toast(context, "B站弹幕：已加载 " + data.size() + " 条");
+        if (context != null && !BilibiliDanmakuSheet.isShowing())
+            toast(context, String.format(java.util.Locale.ROOT, "B站弹幕：已加载 %,d 条", data.size()));
         updateView();
         BilibiliDanmakuSheet.sourceChanged();
     }

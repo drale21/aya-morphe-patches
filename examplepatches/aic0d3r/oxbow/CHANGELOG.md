@@ -6,7 +6,22 @@ kept below, unchanged.
 
 ## Unreleased
 
-Nothing yet.
+### Added
+- **What's installed, in Settings → Updates.** The page now shows the Instagram version, the
+  patch bundle, whether this is an official release or a build you patched yourself, whether
+  it's the clone, and which app installed it. Long-press it to copy all of that for a bug report.
+
+### Changed
+- **"Star on GitHub" in the What's new card**, replacing the Sponsor button there. Sponsoring
+  is still in Settings, under Support, next to a new Star button.
+
+## Oxbow v454-0-0-54-77, patch bundle 1.3.2
+
+### Fixed
+- **Hidden tabs coming back, and the settings long-press going away, after a while.** On some
+  Instagram 454 builds Oxbow attached to the wrong screen element instead of the bottom bar,
+  so a hidden Reels tab could reappear and holding Home or Messages stopped opening the
+  settings. Oxbow now finds the bottom bar reliably and follows it if Instagram rebuilds it.
 
 ## Oxbow v454-0-0-54-77, patch bundle 1.3.1
 

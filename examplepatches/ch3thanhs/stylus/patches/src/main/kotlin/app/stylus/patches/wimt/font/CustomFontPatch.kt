@@ -1,12 +1,17 @@
 package app.stylus.patches.wimt.font
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.removeInstruction
 import app.morphe.patcher.patch.PatchException
-import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.patch.resourcePatch
+import app.morphe.patcher.patch.decode
+import app.morphe.patcher.patch.deleteResource
+import app.morphe.patcher.patch.patch
+import app.morphe.patcher.patch.resourceFile
 import app.morphe.patcher.patch.stringOption
 import app.stylus.patches.wimt.shared.Constants.COMPATIBILITY_WIMT
 import com.android.tools.smali.dexlib2.Opcode
+import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import java.io.File
 
 private const val CUSTOM_FONT_RESOURCE_NAME = "custom_ui_font"
@@ -114,6 +119,99 @@ private fun fontWeightFromName(name: String): Int {
 
 private fun fontStyleFromName(name: String): String =
     if (name.contains("italic", ignoreCase = true)) "italic" else "normal"
+
+// Covers android:fontFamily, app fontFamily, and theme attributes such as
+// themeFontFamilyContent or themeFontFamilyContentMedium.
+private val fontFamilyItemRegex = Regex(
+    """(<item\s+name="[^"]*fontFamily[^"]*"\s*>)([^<]*)(</item>)""",
+    RegexOption.IGNORE_CASE,
+)
+
+private val systemFontFamilyWeights = mapOf(
+    "sans-serif" to 400,
+    "sans-serif-medium" to 500,
+    "sans-serif-light" to 300,
+    "sans-serif-thin" to 200,
+    "sans-serif-black" to 900,
+    "sans-serif-condensed" to 400,
+    "sans-serif-condensed-light" to 300,
+    "sans-serif-smallcaps" to 400,
+    "serif" to 400,
+    "cursive" to 400,
+    "casual" to 400,
+)
+
+private fun systemFontWeightFromValue(value: String): Int? {
+    val family = value.trim().trim('"').lowercase()
+    if (family.startsWith("@string/m3_ref_typeface") ||
+        family.startsWith("@string/survey_font")
+    ) {
+        return if (family.contains("medium")) 500 else 400
+    }
+
+    // Android 16 uses these family names for Material 3 typescale text.
+    if (family.startsWith("variable-")) {
+        return when {
+            family.contains("label") && family.contains("emphasized") -> 600
+            family.contains("emphasized") ||
+                family.contains("label") ||
+                family.contains("medium") -> 500
+            else -> 400
+        }
+    }
+
+    return systemFontFamilyWeights[family]
+}
+
+private fun weightedCustomFontResource(
+    baseFontResDir: File,
+    weight: Int,
+): String {
+    if (weight == 400) {
+        return CUSTOM_FONT_RESOURCE_NAME
+    }
+
+    val resourceName = "${CUSTOM_FONT_RESOURCE_NAME}_$weight"
+    baseFontResDir.resolve("$resourceName.xml").writeText(
+        buildSingleFontXml(CUSTOM_FONT_RESOURCE_NAME, weight, "normal"),
+    )
+    return resourceName
+}
+
+/**
+ * Material and AppCompat components resolve their own textAppearance and can
+ * pin a system family such as "sans-serif" or Material 3's
+ * "@string/m3_ref_typeface_plain_medium". Those bypass the bundled font
+ * resources entirely, so point them at the custom font as well.
+ */
+private fun updateSystemFontFamilyStyles(resDir: File, baseFontResDir: File) {
+    val valuesDirs = resDir.listFiles()
+        ?.filter { it.isDirectory && (it.name == "values" || it.name.startsWith("values-")) }
+        ?.sortedBy { it.name }
+        ?: emptyList()
+
+    valuesDirs.forEach { valuesDir ->
+        val stylesFile = valuesDir.resolve("styles.xml")
+        if (!stylesFile.isFile) {
+            return@forEach
+        }
+
+        val content = stylesFile.readText()
+        val updatedContent = fontFamilyItemRegex.replace(content) { match ->
+            val weight = systemFontWeightFromValue(match.groupValues[2])
+            if (weight == null) {
+                match.value
+            } else {
+                val resourceName = weightedCustomFontResource(baseFontResDir, weight)
+                "${match.groupValues[1]}@font/$resourceName${match.groupValues[3]}"
+            }
+        }
+
+        if (updatedContent != content) {
+            stylesFile.writeText(updatedContent)
+        }
+    }
+}
 
 /**
  * Accepts Android's native CSS-like OpenType feature syntax and a full CSS
@@ -254,7 +352,7 @@ private val fontFeatureSettingsOption = stringOption(
  * so it can also apply the feature settings to Compose text; this dependency
  * handles the font files, View styles, and Material 3 feature string.
  */
-private val customFontResourcesWimtPatch = resourcePatch(
+private val customFontResourcesWimtPatch = patch(
     name = "Custom font resources",
     description = "Internal font resource replacement.",
     default = false,
@@ -282,7 +380,7 @@ private val customFontResourcesWimtPatch = resourcePatch(
             )
         }
 
-        val resDir = get("res")
+        val resDir = resourceFile("res")
 
         // Morphe Patcher 2.0.0 and newer decode resources on request instead of
         // up front, so a directory only holds what has been decoded so far.
@@ -332,7 +430,7 @@ private val customFontResourcesWimtPatch = resourcePatch(
             if (target.extension.lowercase() in allowedFontExtensions) {
                 // Mark the old font for removal from the rebuilt APK. Deleting the
                 // staged file alone leaves the original entry in the output.
-                delete("res/${target.parentFile.name}/${target.name}")
+                deleteResource("res/${target.parentFile.name}/${target.name}")
             }
 
             val xmlFile = target.parentFile.resolve("$resourceName.xml")
@@ -349,18 +447,24 @@ private val customFontResourcesWimtPatch = resourcePatch(
             xmlFile.writeText(xmlContent)
         }
 
+        // Text appearances (notably Material components such as chips) can pin
+        // a system family instead of inheriting the theme font. Decode and
+        // rewrite those styles so they use the custom font too.
+        decode("res/values*/styles.xml")
+        updateSystemFontFamilyStyles(resDir, baseFontResDir)
+
         val featureSettings = normalizeFontFeatureSettings(fontFeatureSettingsOption.value)
         if (featureSettings != null) {
             // The values files are decoded on request too, so decode them before
             // walking res/values* for the Material 3 feature string and styles.
-            decode("res/values*/strings.xml", "res/values*/styles.xml")
+            decode("res/values*/strings.xml")
             updateFontFeatureResources(resDir, featureSettings)
         }
     }
 }
 
 @Suppress("unused")
-val customFontWimtPatch = bytecodePatch(
+val customFontWimtPatch = patch(
     name = "Custom font",
     description = "Replaces the bundled Google Sans, Nunito Sans, and Roboto UI fonts with " +
         "your own font.",
@@ -375,6 +479,31 @@ val customFontWimtPatch = bytecodePatch(
     dependsOn(customFontResourcesWimtPatch)
 
     execute {
+        // The track row binder resets station names to Typeface.DEFAULT. Drop
+        // that reset so they keep the theme font, which this patch replaces.
+        val trackRowMethod = TrackRowTypefaceFingerprint.method
+        val trackRowInstructions = trackRowMethod.implementation?.instructions
+            ?: throw PatchException("Track row binder has no implementation.")
+
+        val typefaceResetIndex = trackRowInstructions.indexOfFirst { instruction ->
+            if (instruction.opcode != Opcode.INVOKE_VIRTUAL) {
+                return@indexOfFirst false
+            }
+
+            val reference = (instruction as? ReferenceInstruction)?.reference as? MethodReference
+                ?: return@indexOfFirst false
+
+            reference.definingClass == "Landroid/widget/TextView;" &&
+                reference.name == "setTypeface" &&
+                reference.parameterTypes.singleOrNull() == "Landroid/graphics/Typeface;"
+        }
+
+        if (typefaceResetIndex < 0) {
+            throw PatchException("Could not find the station name typeface reset.")
+        }
+
+        trackRowMethod.removeInstruction(typefaceResetIndex)
+
         val featureSettings =
             normalizeFontFeatureSettings(fontFeatureSettingsOption.value) ?: return@execute
 

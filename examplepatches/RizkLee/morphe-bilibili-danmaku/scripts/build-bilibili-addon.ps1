@@ -5,6 +5,9 @@ Set-StrictMode -Version Latest
 $repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $addon = Join-Path $repo 'bilibili-addon'
 if (-not $env:JAVA_HOME -or -not $env:ANDROID_HOME) { throw 'Set JAVA_HOME and ANDROID_HOME first.' }
+# The settings plugin evaluates these as fallbacks even when -Pgpr.* is given (Gradle 9 rejects null).
+if (-not $env:GITHUB_ACTOR) { $env:GITHUB_ACTOR = 'local' }
+if (-not $env:GITHUB_TOKEN) { $env:GITHUB_TOKEN = 'local' }
 $d8 = Join-Path $env:ANDROID_HOME 'build-tools/36.1.0/d8.bat'
 $androidJar = Join-Path $env:ANDROID_HOME 'platforms/android-36/android.jar'
 if (-not (Test-Path -LiteralPath $d8) -or -not (Test-Path -LiteralPath $androidJar)) { throw 'Android SDK platform 36 and build-tools 36.1.0 are required.' }
