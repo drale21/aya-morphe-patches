@@ -45,6 +45,8 @@ public final class TrackPreference {
     private static final int REMEMBERED = 64;
     /** The dub each video's switch asked for, by video id. */
     private static final Map<String, String> ASKED = recent();
+    /** The dub the setup decision played, by video id, for copies of the video that list none. */
+    private static final Map<String, String> KNOWN = recent();
     /** Players that already had their one look: video id plus the identity of its track list. */
     private static final Map<String, Boolean> SETTLED = recent();
 
@@ -147,11 +149,15 @@ public final class TrackPreference {
     /** The dub language the playback decision compares every track against. Empty matches none. */
     public static String dubTarget(Object aweme, String stock) {
         HookStatus.bound(FAMILY, "dub pick");
-        if (Settings.FORCE_ORIGINAL_DUB.get()) return "";
+        if (Settings.FORCE_ORIGINAL_DUB.get()) {
+            know(Reflect.string(aweme, "getAid", "aid"), null);
+            return "";
+        }
         List<String> wanted = wantedDubs();
         if (wanted.isEmpty()) return stock;
         String choice = chooseDub(aweme, wanted);
         String target = choice == null ? stock : ORIGINAL.equals(choice) ? "" : choice;
+        know(Reflect.string(aweme, "getAid", "aid"), playedDub(aweme, wanted, choice, stock));
         Logger.printDebug(() -> "Dub pick: " + describeDubs(aweme) + " stock=" + stock
             + " -> " + target);
         return target;
@@ -179,10 +185,14 @@ public final class TrackPreference {
         }
         String own = originalCode(readSubtitles(captionModel(aweme)));
         String choice = forceOriginal ? ORIGINAL : chooseDub(aweme, wanted);
-        String result = settleDubLanguage(choice, own, stock, forceOriginal || Settings.FORCE_DUB.get());
-        remember(video, result != null && result.equals(choice) ? result : null);
+        // A copy that lists no dubs can't settle anything, so it keeps the dub the setup played.
+        String known = forceOriginal || video == null || !readDubs(aweme).isEmpty() ? null : KNOWN.get(video);
+        String result = known != null ? known
+            : settleDubLanguage(choice, own, stock, forceOriginal || Settings.FORCE_DUB.get());
+        remember(video, result != null && (result.equals(choice) || result.equals(known)) ? result : null);
         Logger.printDebug(() -> "Dub switch: " + describeDubs(aweme) + " stock=" + stock
-            + " own=" + own + " choice=" + choice + " -> " + result);
+            + " own=" + own + " choice=" + choice + (known == null ? "" : " known=" + known)
+            + " -> " + result);
         return result;
     }
 
@@ -222,9 +232,33 @@ public final class TrackPreference {
         else ASKED.put(video, language);
     }
 
-    /** Forgets every asked dub and settled player, for tests. */
+    /**
+     * The listed dub the setup plays, or null. A post reopened from Favorites gets its switch from
+     * a copy that lists no dubs, which can only name the original and so undid the dub. Its setup
+     * often lists none either, and then plays the app's own target when that's on the list.
+     */
+    private static String playedDub(Object aweme, List<String> wanted, String choice, String stock) {
+        if (ORIGINAL.equals(choice)) return null;
+        String own = originalCode(readSubtitles(captionModel(aweme)));
+        if (choice != null) {
+            return choice.equals(settleDubLanguage(choice, own, stock, Settings.FORCE_DUB.get())) ? choice : null;
+        }
+        String language = stock == null ? null : CaptionLanguageFilter.primary(stock);
+        if (language == null || !wanted.contains(language)) return null;
+        return own != null && language.equals(CaptionLanguageFilter.primary(own)) ? null : stock;
+    }
+
+    /** Keeps the dub a video's setup played, or forgets it with null. */
+    private static void know(String video, String language) {
+        if (video == null) return;
+        if (language == null) KNOWN.remove(video);
+        else KNOWN.put(video, language);
+    }
+
+    /** Forgets every asked and played dub and settled player, for tests. */
     static void forgetDubs() {
         ASKED.clear();
+        KNOWN.clear();
         SETTLED.clear();
     }
 

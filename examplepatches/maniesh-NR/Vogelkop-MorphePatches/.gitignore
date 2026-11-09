@@ -21,3 +21,7 @@ gradle.properties.orig
 
 # Patch bundle signing (commit morphe-signing.pub, NEVER morphe-signing.key)
 morphe-signing.key
+# tools/build_extension.sh downloads (framework jar, r8, dexlib2, ecj)
+tools/.cache/
+work-audit/
+work-find/

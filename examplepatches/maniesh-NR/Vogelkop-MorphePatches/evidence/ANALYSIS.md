@@ -249,19 +249,21 @@ and forces `U()` to `false`, so neither crash recovery nor the clone-detection
 flag can interrupt start-up with this dialog. Genuine crashes still surface as
 crashes (visible in `adb logcat`), which is more actionable than the dialog.
 
-## 6. First-run engine download, MainLibraryBoot and the v1.2.0 splash fix
+## 6. MainLibraryBoot, the welcome-splash deadlock and the v1.2.0/v1.2.1 crash
 
-### 6.1 The engine is not in the APK
+### 6.1 The engine is INSIDE the APK (corrected in v1.2.1)
 
-Opera stable/beta Play bundles ship **no browser engine**: `base.apk` contains
-only ten small helper libraries plus an 84 MB `lib/armeabi-v7a/libopera.so`
-(the whole Chromium engine, 32-bit only) — and a decoy
-`lib/arm64-v8a/libdummy.so` that is itself a **32-bit ARM ELF**. When
-`PackageManager` picks the primary ABI it reads ELF headers
-(`NativeLibraryHelper.findSupportedAbi`); the 32-bit ELF in the arm64 directory
-is rejected, so installs fall back to `armeabi-v7a` and the app runs 32-bit on
-every device. Chromium's `LibraryLoader` then does
-`System.loadLibrary("opera")` (`Lz4o;->l[0]`).
+v1.2.0's notes claimed the Play bundle downloads its Chromium engine at first
+run. That is wrong: `base.apk` ships the whole engine — an 84 MB
+`lib/armeabi-v7a/libopera.so` (STORED/uncompressed, page-aligned) plus a decoy
+32-bit ELF in `lib/arm64-v8a/libdummy.so` that `NativeLibraryHelper` rejects,
+which forces every install onto the 32-bit ABI (`android:use32bitAbi="true"`,
+`android:multiArch="true"`). The manifest sets `android:extractNativeLibs=
+"false"`, so the engine is dlopen-ed straight from the APK and the `.so`
+entries must stay uncompressed and aligned through any repack. Morphe's
+pipeline does keep them byte-identical (verified on all three apps: identical
+CRCs, STORED, 16 KiB-aligned). Engine load is `System.loadLibrary("opera")`
+(`Lz4o;->l[0]`), coordinated by the MainLibraryBoot state machine.
 
 ### 6.2 MainLibraryBoot
 
@@ -283,22 +285,37 @@ The welcome screen (`WelcomeActivity` via `Lu9k;`) reacts to the failure state
 *broken installation* dialog builder `Lkfo;->d0` — and nothing else. With
 v1.1.x that builder is a no-op, so a failed engine boot left the purple welcome
 splash up forever (black screen after the process was killed): the reported
-Opera Beta symptom.
+Opera Beta symptom on v1.1.x.
 
-### 6.3 Why the boot failed on patched installs
+### 6.3 What v1.2.0 actually broke (and v1.2.1 fixed)
 
-The patched APK is byte-for-byte equivalent to the original except for dex,
-two whitelist assets and `resources.arsc`; every `.so` entry is reused
-unchanged and stays 4 KB/16 KB-aligned, the manifest is identical, and
-`resources.arsc` remains uncompressed and 4-aligned. Static analysis found no
-APK-level difference that can break `System.loadLibrary`. The remaining
-difference is the **signing certificate** (Morphe key instead of Opera's), and
-Opera's Java code reads its own signature in several places (preinstall
-partner check `Ldtg;->c`, MoMi SDK integrity, metrics `Lg11;`), making a
-certificate-gated first-run setup the plausible failure — the engine pack is
-downloaded at first run, exactly when the hang occurs. (Remote devices are
-needed for a definitive `adb logcat` confirmation; the boot coordinator logs
-`MainLibraryBoot: LIB_LOAD/CHROMIUM_START` with the throwable.)
+v1.2.0's answer to §6.2 was a signature-spoofing extension plus the
+announcement rewrite. The extension, however, was compiled against
+hand-written Android framework stubs (`tools/android-stubs`, since removed)
+that modeled several framework types with the wrong shape:
+
+- `android.util.Base64` was declared as a Kotlin `object`, so the extension
+  called a **nonexistent `Base64.INSTANCE` static field** and an
+  **instance `decode(String, int)`** (the real method is static, and platform
+  classes have no `INSTANCE` field);
+- `PackageInfo`'s public *fields* (`packageName`, `signatures`, `signingInfo`)
+  were declared as Kotlin `var` properties, so the extension called
+  **nonexistent getters** `getPackageName()`/`getSignatures()`/`getSigningInfo()`.
+
+On a device those references throw `NoSuchFieldError`/`NoSuchMethodError`
+inside `SignatureHookApp`'s static initializer (which runs before any app
+code, because `OperaApplication`/`LeanplumApplication` were re-parented onto
+the hook class), i.e. `ExceptionInInitializerError` at process start: the
+app dies before drawing anything — the "black screen and the app crashes"
+reported for v1.2.0, on every patched app.
+
+v1.2.1 compiles the extension against the **real framework** (Robolectric's
+`android-all` AOSP build) and adds `tools/AuditExtDex.java`: after D8, every
+`android/*` class/method/field reference in the extension dex is resolved
+against the real framework via reflection (including static/instance call-kind
+checks), and the build fails if anything does not match. On the v1.2.0
+extension the audit reports exactly the four bugs above; on v1.2.1 it reports
+4 class refs, 7 method refs and 5 field refs, all valid.
 
 ### 6.4 Official certificate
 
@@ -315,15 +332,15 @@ The same vendor key signs Play and get.opera.com builds of Opera, Opera Beta
 and Opera GX, so it is embedded (Base64 DER) in the *Spoof app signature*
 patch as the default spoof target.
 
-### 6.5 Patch response (v1.2.0)
+### 6.5 Patch response (v1.2.1)
 
 * **Spoof app signature** — an extension (raw-dex `extensions/extension.mpe`,
   Kotlin port of rushiranpise's `SignatureHookApp`, ApkSignatureKillerEx
   lineage) re-parents `OperaApplication`/`LeanplumApplication` and swaps
   `PackageInfo.CREATOR` with a proxy that rewrites the signature/signing-info
   fields of this package's `PackageInfo` parcels back to the Opera
-  certificate. All in-app signature reads — SDKs, the first-run setup, the
-  engine download client — then observe the vendor identity.
+  certificate. All in-app signature reads — the preinstall partner check,
+  the MoMi SDK, metrics — then observe the vendor identity.
 * **Ignore browser boot failures** — in the MainLibraryBoot coordinator, both
   `invoke-interface … -><name>(I)V` failure announcements (the
   `b(I, Throwable)` flush loop and the late-subscriber branch) are rewritten
@@ -333,9 +350,70 @@ patch as the default spoof target.
   log tag and the callback interface via the registration method's parameter
   type — never by obfuscated names (they differ between stable and beta:
   `Le7d;->c(I)V` vs `Ly0d;->e(I)V`).
+* **Disable analytics & tracking** (new in v1.2.1) — since Morphe Patcher 2.0
+  fingerprint strings match exactly by default, the endpoint scan passes an
+  explicit `StringComparisonType.CONTAINS` and rewrites the host substring
+  inside each constant (`https://app-measurement.com/x` →
+  `https://0.0.0.0/x`). 80 `const-string` constants on stable/beta (in
+  `ads_mobile_sdk`, Google IMA and Firebase Measurement code) plus one static
+  field value (`Lcom/leanplum/internal/Constants;->API_HOST_NAME =
+  "api.leanplum.com"`, rewritten via `MutableField.setInitialValue`), and 8
+  constants on GX. Firebase Installations / Remote Config / Storage and all
+  Opera first-party hosts are deliberately untouched.
 
-Verified by the local driver on Beta 104.0.5262.91143 and stable
-103.3.5234.91185 `base.apk` (all six patches) and GX 3.3.18 (both GX
-patches); the patched output was re-disassembled to confirm the re-parenting,
-the rewritten announcements and the embedded certificate, and re-checked for
-native-lib alignment.
+Verified headlessly (Morphe Desktop CLI v2.1.1) on Beta 104.0.5262.91143,
+stable 103.3.5234.91185 and GX 3.3.18 APKM inputs: every patch applies; the
+patched output was re-disassembled to confirm the re-parenting, the rewritten
+announcements, the embedded certificate and the dead-host endpoints; native
+libs stay byte-identical/STORED/16 KiB-aligned; the output verifies with
+apksig (v2, CN=Morphe); the patched SQL parses in SQLite; and
+`tools/AuditExtDex` reports zero unresolved `android/*` references in the
+modified dex.
+
+### 6.4 What v1.2.1 still broke (and v1.2.2 fixes)
+
+v1.2.1 fixed every *compile-time* reference in the extension, yet patched apps
+still crashed instantly on open. The remaining fault is *runtime* semantics:
+`killPackageManager` installed the proxy with a bare
+`findField(PackageInfo.class, "CREATOR").set(null, creator)` and wrapped the
+whole block in `catch (Exception e) { throw new RuntimeException(...) }`.
+
+- `PackageInfo.CREATOR` is `public static final`, and ART — exactly like the
+  desktop JDK — refuses `Field.set()` on final fields. The
+  ApkSignatureKillerEx lineage therefore clears the FINAL bit in the hidden
+  `java.lang.reflect.Field#accessFlags` field first (the Android equivalent of
+  the JDK `modifiers` reflection hack; Android's `Field` has no `modifiers`).
+  The port had dropped that step, so on current Android the `set` throws
+  `IllegalAccessException`.
+- The catch block then **re-threw from a static initializer**: the hook runs
+  from `<clinit>` (via the re-parented `OperaApplication`/`LeanplumApplication`
+  superclasses), so any escaping throwable surfaces as
+  `ExceptionInInitializerError` at `new OperaApplication()` — an immediate
+  crash-on-open, before the first frame, indistinguishable to the user from
+  the v1.2.0 stub crash. Notably `catch (Exception)` would not even have
+  caught a linkage `Error` (e.g. a missing class); only `catch (Throwable)`
+  makes a `<clinit>` safe.
+
+The upstream `rushiranpise/morphe-patches` `SignatureHookApp.java` carries the
+same two flaws — it presumably survives only on Android builds that still
+allow final-field writes.
+
+v1.2.2 hardens the hook:
+
+1. **Nothing can escape the initializer.** `killPackageManager` catches
+   `Throwable` and logs via `android.util.Log`; a spoof that cannot be
+   installed leaves a *working* app that simply sees the Morphe certificate
+   (signature reads keep their patched-build behavior instead of crashing).
+2. **The swap uses the full technique chain**, attempted in order:
+   hidden-API exemptions first (VMRuntime `setHiddenApiExemptions("L")` via
+   meta-reflection — previously called *after* the swap it was meant to
+   enable), then `Field#accessFlags` FINAL-bit clear + `Field.set`, then a
+   `sun.misc.Unsafe` `staticFieldBase`/`staticFieldOffset`/`putObject` write
+   (Unsafe writes bypass the final check entirely; `sun.misc.Unsafe` is
+   greylisted but reflectable), then a plain set for ART builds that allow
+   final writes. Each route returns its success; the proxy installs on
+   modern Android instead of silently degrading.
+
+Play Protect's "app hasn't been seen before" prompt on install is unrelated
+and expected: every Morphe/ReVanced-style build is re-signed with a local key
+and therefore never matches a Play-distributed certificate.

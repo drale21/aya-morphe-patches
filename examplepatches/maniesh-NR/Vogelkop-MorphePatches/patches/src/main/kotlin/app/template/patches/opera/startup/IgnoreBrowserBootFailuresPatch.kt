@@ -13,17 +13,23 @@ import com.android.tools.smali.dexlib2.iface.instruction.formats.Instruction35c
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 
 /**
- * Opera's browser engine is not shipped inside the (Play) base APK: at first
- * run the app downloads and installs the Chromium engine ("MainLibraryBoot",
- * see `Le7d;` in Opera Beta 104 / `Ly0d;` in Opera stable 103), and the
- * welcome screen waits for that boot to finish. If the boot fails, the boot
- * coordinator announces a failure reason (LIB_LOAD / CHROMIUM_START /
- * EMULATED_ARM) to every waiting component, and the welcome flow's Compose
- * observer responds by calling the "broken installation" dialog builder -
- * which the *Hide broken installation dialog* patch turns into a no-op. The
- * result of a boot failure on a patched build used to be an eternal welcome
- * splash (and a black screen on relaunch), because nothing else in the
- * failure path advances the UI.
+ * Opera's browser engine ships INSIDE the (Play) base APK: an 84 MB
+ * 32-bit `lib/armeabi-v7a/libopera.so` (plus a decoy 32-bit ELF in
+ * `lib/arm64-v8a/` that forces every install onto the 32-bit ABI), so a
+ * patched build loads it from its own APK exactly like a store build - the
+ * patcher keeps the entry byte-identical, uncompressed and page-aligned.
+ * Engine load/start is still coordinated by the MainLibraryBoot state machine
+ * (class `Le7d;` in Opera Beta 104 / `Ly0d;` in Opera stable 103, found by its
+ * stable `"MainLibraryBoot: "` log tag), and the welcome screen waits for
+ * that boot to finish. If the boot fails for any reason (a library that
+ * cannot load on the device, a Chromium start error, an x86 device hitting
+ * the ARM-only build), the coordinator announces a failure reason
+ * (LIB_LOAD / CHROMIUM_START / EMULATED_ARM) to every waiting component,
+ * and the welcome flow's Compose observer responds by calling the
+ * "broken installation" dialog builder - which the *Hide broken installation
+ * dialog* patch turns into a no-op. The result of a boot failure on a patched
+ * build used to be an eternal welcome splash (and a black screen on relaunch),
+ * because nothing else in the failure path advances the UI.
  *
  * This patch rewrites the coordinator's failure announcements into success
  * notifications: every `invoke-interface {client, reason}, <callback>-><name>
@@ -38,10 +44,11 @@ import com.android.tools.smali.dexlib2.iface.reference.MethodReference
  * differ between stable 103 and beta 104, e.g. `Le7d;->c(I)V` vs
  * `Ly0d;->e(I)V`, which is why nothing here is matched by name).
  *
- * With *Spoof app signature* applied the engine download succeeds and the
- * failure path should not trigger at all; this patch is the safety net that
- * keeps the UI reachable even if it does (for example after an unrelated
- * one-time crash or an offline first start).
+ * With *Spoof app signature* applied, the in-app signature reads that could
+ * make Opera's own startup code take a failure path answer with the vendor
+ * certificate; this patch is the safety net that keeps the UI reachable even
+ * if the boot still fails (for example after an unrelated one-time crash or
+ * on x86 hardware without ARM translation).
  */
 private object MainLibraryBootFailureAnnouncerFingerprint : Fingerprint(
     returnType = "V",
@@ -65,13 +72,14 @@ private fun isAppInterfaceCall(reference: MethodReference): Boolean {
 @Suppress("unused")
 val operaIgnoreBootFailuresPatch = bytecodePatch(
     name = "Ignore browser boot failures",
-    description = "Stops a failed first-run engine boot (MainLibraryBoot) from " +
-        "deadlocking the welcome screen. Opera announces boot failures " +
-        "(engine download or Chromium start) to the welcome flow, which used " +
-        "to call the now-hidden \"broken installation\" dialog and then wait " +
+    description = "Stops a failed engine boot (MainLibraryBoot) from " +
+        "deadlocking the welcome screen. The Chromium engine ships inside the " +
+        "APK; if its load or start still fails (device without ARM support, a " +
+        "start error), Opera announces the failure to the welcome flow, which " +
+        "used to call the now-hidden \"broken installation\" dialog and then wait " +
         "forever. The announcements are converted into success notifications " +
-        "so startup always continues. Pair with \"Spoof app signature\", " +
-        "which fixes the underlying certificate-gated engine download.",
+        "so startup always continues. Pair with \"Spoof app signature\", which " +
+        "keeps Opera's in-app signature reads on their vendor-build behavior.",
     default = true,
 ) {
     compatibleWith(OPERA_COMPATIBILITY, OPERA_DIRECT_COMPATIBILITY, OPERA_BETA_COMPATIBILITY)

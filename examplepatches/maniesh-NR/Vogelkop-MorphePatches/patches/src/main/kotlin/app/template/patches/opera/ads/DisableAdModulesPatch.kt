@@ -73,9 +73,9 @@ val operaDisableAdModulesPatch = patch(
             }
         }
 
-        if (patched < adModuleClasses.size) {
+        if (patched != adModuleClasses.size) {
             throw PatchException(
-                "Expected at least ${adModuleClasses.size} ad module class references, " +
+                "Expected exactly ${adModuleClasses.size} ad module class references, " +
                     "found $patched. Is this an unsupported Opera version?",
             )
         }

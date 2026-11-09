@@ -71,9 +71,9 @@ val operaRemoveSponsoredSpeedDialPatch = patch(
             }
         }
 
-        if (patched < sqlReplacements.size) {
+        if (patched != sqlReplacements.size) {
             throw PatchException(
-                "Expected ${sqlReplacements.size} suggested-sites SQL constants, " +
+                "Expected exactly ${sqlReplacements.size} suggested-sites SQL constants, " +
                     "found $patched. Is this an unsupported Opera version?",
             )
         }

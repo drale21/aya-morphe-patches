@@ -469,6 +469,80 @@ public class TrackPreferenceTest {
     }
 
     @Test
+    public void aSavedPostKeepsItsDubWhenTheDetailCopyListsNone() {
+        // Favorites > Posts: the grid's copy lists the dub and the setup plays it, but the switch
+        // comes from the detail page's copy, which lists no dubs and only knows the original.
+        Settings.DUB_PRIORITY.save("id");
+        Item detail = itemWithCaptions();
+        assertEquals("en", TrackPreference.dubLanguage(detail, "en", null));
+
+        assertEquals("id", TrackPreference.dubTarget(dubbed("id"), "id"));
+        assertEquals("id", TrackPreference.dubLanguage(detail, "en", null));
+        assertEquals(4, TrackPreference.dubTrack(detail.aid, playerTracks(), TrackPreference.AUDIO, 1));
+
+        // Another video's copy gets nothing from it.
+        Item other = itemWithCaptions();
+        other.aid = "7701427349606108447";
+        assertEquals("en", TrackPreference.dubLanguage(other, "en", null));
+        // A copy that does list dubs settles on its own.
+        assertEquals("en", TrackPreference.dubLanguage(dubbed("fr"), "en", null));
+    }
+
+    @Test
+    public void aSetupThatListsNoDubsStillCountsTheAppsTargetFromTheList() {
+        // What the S22 showed: the setup's copy lists no dubs either, and the app targets "id".
+        Settings.DUB_PRIORITY.save("id");
+        Item detail = itemWithCaptions();
+        assertEquals("id", TrackPreference.dubTarget(detail, "id"));
+        assertEquals("id", TrackPreference.dubLanguage(detail, "en", null));
+        assertEquals(4, TrackPreference.dubTrack(detail.aid, playerTracks(), TrackPreference.AUDIO, 1));
+    }
+
+    @Test
+    public void anAppTargetOffTheListOrInTheVideosOwnLanguageIsNotKept() {
+        Settings.DUB_PRIORITY.save("fr");
+        Item detail = itemWithCaptions();
+        assertEquals("id", TrackPreference.dubTarget(detail, "id"));
+        assertEquals("en", TrackPreference.dubLanguage(detail, "en", null));
+
+        // English is this video's own audio, so an "en" target isn't a dub to keep.
+        Settings.DUB_PRIORITY.save("en");
+        assertEquals("en", TrackPreference.dubTarget(detail, "en"));
+        assertEquals("en", TrackPreference.dubLanguage(detail, "en", null));
+        Map<String, Integer> tracks = playerTracks();
+        tracks.put("en", 5);
+        assertEquals(-1, TrackPreference.dubTrack(detail.aid, tracks, TrackPreference.AUDIO, 4));
+    }
+
+    @Test
+    public void aDetailCopyWithoutDubsStillYieldsToAHandChoiceAndTheOriginal() {
+        Settings.DUB_PRIORITY.save("id");
+        Item detail = itemWithCaptions();
+        assertEquals("id", TrackPreference.dubTarget(dubbed("id"), "id"));
+        assertEquals("en", TrackPreference.dubLanguage(detail, "en", Choice.OVERRIDE_TO_ORIGINAL));
+        assertEquals(-1, TrackPreference.dubTrack(detail.aid, playerTracks(), TrackPreference.AUDIO, 1));
+
+        Settings.FORCE_ORIGINAL_DUB.save(true);
+        assertNull(TrackPreference.dubLanguage(detail, "en", null));
+        assertEquals("", TrackPreference.dubTarget(dubbed("id"), "id"));
+        Settings.FORCE_ORIGINAL_DUB.save(false);
+        // The setup that kept the original forgot the dub, so the detail copy keeps it too.
+        assertEquals("en", TrackPreference.dubLanguage(detail, "en", null));
+    }
+
+    @Test
+    public void aSetupThatKeepsTheVideosOwnAudioLeavesTheDetailCopyAlone() {
+        // The app was going to play the video's own language, and nothing forces a dub.
+        Settings.DUB_PRIORITY.save("id");
+        assertEquals("id", TrackPreference.dubTarget(dubbed("id"), "en"));
+        assertEquals("en", TrackPreference.dubLanguage(itemWithCaptions(), "en", null));
+        // Force dub plays it anyway, so the detail copy keeps it.
+        Settings.FORCE_DUB.save(true);
+        assertEquals("id", TrackPreference.dubTarget(dubbed("id"), "en"));
+        assertEquals("id", TrackPreference.dubLanguage(itemWithCaptions(), "en", null));
+    }
+
+    @Test
     public void theDubLabelOnlyGoesOffWhereTheSettingsKeepTheVideosOwnAudio() {
         Item item = new Item();
         item.audio.tts.add(new Tts("en-US"));
