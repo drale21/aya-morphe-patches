@@ -2699,14 +2699,6 @@
                 "updatedAt": 1791873446408
             },
             {
-                "name": "x-morphe-patches",
-                "source": "https://raw.githubusercontent.com/andradeatdev/x-morphe-patches/main/patches-bundle.json",
-                "autoUpdate": true,
-                "sortOrder": 380,
-                "createdAt": 1791873448130,
-                "updatedAt": 1791873448130
-            },
-            {
                 "name": "arsylk-patches",
                 "source": "https://raw.githubusercontent.com/Arsylk/arsylk-patches/main/patches-bundle.json",
                 "autoUpdate": true,
@@ -3337,14 +3329,6 @@
                 "sortOrder": 475,
                 "createdAt": 1793249490735,
                 "updatedAt": 1793249490735
-            },
-            {
-                "name": "veloce-patches",
-                "source": "https://raw.githubusercontent.com/M4TH1EU/veloce-patches/main/patches-bundle.json",
-                "autoUpdate": true,
-                "sortOrder": 476,
-                "createdAt": 1793249491316,
-                "updatedAt": 1793249491316
             },
             {
                 "name": "gboard-gifs-extended",
@@ -4707,20 +4691,60 @@
                 "updatedAt": 1794113084316
             },
             {
-                "name": "morphe-bilibili-danmaku",
-                "source": "https://raw.githubusercontent.com/RizkLee/morphe-bilibili-danmaku/main/patches-bundle.json",
-                "autoUpdate": true,
-                "sortOrder": 655,
-                "createdAt": 1794113085631,
-                "updatedAt": 1794113085631
-            },
-            {
                 "name": "GoogleMap-Morphe",
                 "source": "https://raw.githubusercontent.com/shuili1013/GoogleMap-Morphe/main/patches-bundle.json",
                 "autoUpdate": true,
                 "sortOrder": 656,
                 "createdAt": 1794113086677,
                 "updatedAt": 1794113086677
+            },
+            {
+                "name": "patches",
+                "source": "https://raw.githubusercontent.com/aayy-dev/patches/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 657,
+                "createdAt": 1794200418746,
+                "updatedAt": 1794200418746
+            },
+            {
+                "name": "chefkoch-android-patches",
+                "source": "https://raw.githubusercontent.com/drtgrf/chefkoch-android-patches/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 658,
+                "createdAt": 1794200421849,
+                "updatedAt": 1794200421849
+            },
+            {
+                "name": "sync-patches",
+                "source": "https://raw.githubusercontent.com/sazap10/sync-patches/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 659,
+                "createdAt": 1794200428415,
+                "updatedAt": 1794200428415
+            },
+            {
+                "name": "morphe-patches",
+                "source": "https://raw.githubusercontent.com/SeveriT/morphe-patches/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 660,
+                "createdAt": 1794200428596,
+                "updatedAt": 1794200428596
+            },
+            {
+                "name": "Maps-AA-AnyMode-Morphe",
+                "source": "https://raw.githubusercontent.com/shuili1013/Maps-AA-AnyMode-Morphe/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 661,
+                "createdAt": 1794200428688,
+                "updatedAt": 1794200428688
+            },
+            {
+                "name": "waylo-patches",
+                "source": "https://raw.githubusercontent.com/way-lo/waylo-patches/main/patches-bundle.json",
+                "autoUpdate": true,
+                "sortOrder": 662,
+                "createdAt": 1794200430124,
+                "updatedAt": 1794200430124
             }
         ]
     }
