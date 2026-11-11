@@ -310,6 +310,7 @@ JacksonJones2003/qqmusic-english-patches
 JacobPlaysGames/CrimeRadar-Morphe-Patches
 Jagannath70086/jagas-morphe-patches
 jagjordi/morphe-patches
+jair1c/farotv-patches
 JamQueueSharing/Jam-Patches
 jancerny2001/morphe-patches
 janowakps/morphe-patches-action
@@ -331,6 +332,7 @@ jmwerk/carbridge-patches
 JoanComasFdz/baconreader-morphe-patches
 joelmzj/cyberjoe
 JoFSlash/quora-patches
+Johannes7k75/gemini-work-profile-patches
 johninnl/nl-morphe-patches
 johnneerdael/dutch-applications-patches
 Joly0/joly0-patches
@@ -410,6 +412,7 @@ Manishrdy/piko
 MarcaDian/morphe-patches-yavot
 markpaul099/gboard-extended-search
 markpaul099/gboard-gifs-extended
+Martinikaws/spotify-merged-patches
 matthewclso/chrome-morphe
 MatthewRiley05/Machu-Morphe-Patches
 MauroGamerVN/Morphe-Patches
@@ -535,6 +538,8 @@ rushiranpise/RI-Vanced-Universal-Morphe-Patches
 rushiranpise/Ri-Vanced-Universal-Morphe-Patches
 ryuya0124/gemini-microg-patches
 ryykitty/twitch-patched
+saadbinyousaf1/sby-patches
+sabbirdj/viper-patches
 sabbirexist/kodex-patches
 sabopura/sabopura-morphe-patches
 Sabrina-Moonlight/gracie-patches
@@ -562,6 +567,7 @@ SFGPLAY/SFGPatches
 Shahriar-0/Telegram-X-Morphe
 shaun-the-sheep-patches/morphe-patches
 shini-cell/shini-morphe
+ShortEnigma0/expertraw-morphe-patches
 ShubhamJ010/gboard-clipboard-history
 ShuhaibNC/morphe-patches
 shuili1013/GoogleMap-Morphe
@@ -703,4 +709,5 @@ Zanuaimi/UniPatches
 zeldrisho/morphe-patches
 zenthora/drtv-morphe-patches
 zerobun0/zerobun-morphe-patches
+zimza1abim/kanye-morphe-patches
 ZoomSass/Mighty-Morphing
