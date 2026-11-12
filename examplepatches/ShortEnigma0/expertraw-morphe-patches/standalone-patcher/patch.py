@@ -15,6 +15,11 @@ Usage:
     python3 patch.py ExpertRAW.apk [-o out.apk] [--ks key.jks --ks-pass pass --ks-alias alias] [--force]
 
 Requires: Java 17+, apktool 2.9+/3.x, Android build-tools 35+ (zipalign, apksigner).
+
+Legal & DMCA:
+    This tool is an independent open-source utility licensed under GPL-3.0-only.
+    Not affiliated with or endorsed by Samsung Electronics Co., Ltd.
+    See DMCA.md for full copyright compliance and legal policies.
 """
 import argparse
 import glob
@@ -374,8 +379,23 @@ def ensure_keystore(args, workdir):
     return ks, "expertraw", "expertraw"
 
 
+LEGAL_NOTICE = """
+Legal & DMCA Notice:
+  This tool does not host, bundle, or distribute any proprietary code or binaries of Samsung
+  Electronics Co., Ltd. It performs local, client-side differential modifications only on an APK
+  supplied by the user. "Samsung", "Galaxy", "Galaxy Store", and "Expert RAW" are registered
+  trademarks of Samsung Electronics Co., Ltd., used strictly under nominative fair use.
+  Not affiliated with, sponsored by, or endorsed by Samsung Electronics Co., Ltd.
+  Licensed under GPL-3.0-only without warranty. See DMCA.md for full policies.
+"""
+
+
 def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=LEGAL_NOTICE,
+    )
     ap.add_argument("apk", help="original Expert RAW APK (your own copy)")
     ap.add_argument("-o", "--out", default=None, help="output APK (default: ExpertRAW-noPP-<version>.apk)")
     ap.add_argument("--apktool", default=shutil.which("apktool") or "apktool")

@@ -43,7 +43,7 @@ The Galaxy Store build is signed with Samsung's platform key, which grants it ab
 ## Morphe patches
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.0.3](https://github.com/ShortEnigma0/expertraw-morphe-patches/releases/tag/v1.0.3)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;2 patches total
+> **[v1.1.0](https://github.com/ShortEnigma0/expertraw-morphe-patches/releases/tag/v1.1.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;2 patches total
 <details open>
 <summary>📦 Expert RAW&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
 <br>
@@ -114,6 +114,10 @@ Sources: [`patches/.../expertraw`](patches/src/main/kotlin/app/morphe/patches/ex
 - The Morphe framework code is © the Morphe project.
 - The Expert RAW patches, extension and standalone patcher are © 2026 ShortEnigma0, GPL-3.0-only.
 
-## Disclaimer
+## Legal, DMCA & Trademark Disclaimer
 
-Not affiliated with, endorsed by, or sponsored by Samsung or the Morphe project. "Samsung", "Galaxy" and "Expert RAW" are trademarks of Samsung Electronics Co., Ltd., used only to identify the app these patches work with. Provided **as is, without warranty**. You're responsible for having the right to modify the APK you patch.
+* **No Proprietary Code or Binaries:** This project does **NOT** host, mirror, bundle, or distribute any proprietary APKs, copyrighted binary code, or assets belonging to Samsung Electronics Co., Ltd. or any third party. The tools operate solely via local, client-side differential bytecode modification on an APK supplied by the user.
+* **Non-Circumvention:** This project does **not** bypass or circumvent DRM, encryption, access controls, or copyright protection mechanisms (17 U.S.C. § 1201).
+* **Trademark Notice:** "Samsung", "Galaxy", "Galaxy Store", "Expert RAW", and "One UI" are registered trademarks of Samsung Electronics Co., Ltd. "Morphe" is a trademark of the Morphe project. Reference to these marks is made strictly under **nominative fair use** for identification and technical compatibility purposes. This project is **not affiliated with, sponsored by, or endorsed by** Samsung Electronics Co., Ltd. or the Morphe project.
+* **Disclaimer of Warranty:** Provided strictly **"AS IS", WITHOUT WARRANTY OF ANY KIND** under GPLv3. Users assume all responsibility for their own use.
+* **DMCA Inquiries & Takedown:** For full legal policies or to submit a copyright notification pursuant to 17 U.S.C. § 512, see [DMCA.md](DMCA.md) or open an issue on GitHub.

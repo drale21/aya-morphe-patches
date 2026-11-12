@@ -25,13 +25,32 @@ public final class ShufflePlus {
     private static final String UNSUPPORTED = "Shuffle+ works on playlists, albums and Liked Songs";
     private static final String REFUSED = "Spotify refused Shuffle+ (free accounts can't choose the order)";
     /**
-     * The bridge streams the player state only while something listens, so this listens and does
-     * nothing else: while Shuffle+ is on, {@link PlayerBridge#lastState()} knows what's playing even
-     * with Trash Bin off.
+     * The context URI most recently shuffled by Shuffle+, or null when playing in standard preset
+     * order or after switching to another context.
      */
-    private static final PlayerBridge.StateListener KEEP_ALIVE = state -> {};
+    private static volatile String shuffledContextUri;
+    private static volatile Runnable stateObserver;
+    /**
+     * The bridge streams the player state only while something listens, so this listens while Shuffle+
+     * is on so {@link PlayerBridge#lastState()} knows what's playing even with Trash Bin off, and
+     * clears {@link #shuffledContextUri} when playback moves to a different context.
+     */
+    private static final PlayerBridge.StateListener KEEP_ALIVE = state -> {
+        if (state == null || state.contextUri == null) return;
+        String current = Esperanto.isLikedSongs(state.contextUri) ? Esperanto.LIKED_SONGS : state.contextUri;
+        String shuffled = shuffledContextUri;
+        if (shuffled != null && !shuffled.equals(current)) {
+            setShuffledContextUri(null);
+        }
+    };
     /** Not a 64-bit generator, which can reach only a sliver of the orders of a list past 20 songs. */
     private static final Random RANDOM = new SecureRandom();
+
+    enum Mode {
+        SHUFFLE,
+        PRESET,
+        TOGGLE
+    }
 
     private ShufflePlus() {}
 
@@ -48,8 +67,30 @@ public final class ShufflePlus {
     private static synchronized void onSwitch(Context context, boolean on) {
         if (!on) {
             PlayerBridge.removeStateListener(KEEP_ALIVE);
+            setShuffledContextUri(null);
         } else if (Extensions.isOn(context, Extensions.SHUFFLE_PLUS)) {
             PlayerBridge.addStateListener(KEEP_ALIVE);
+        }
+    }
+
+    /** Whether Shuffle+ is actively shuffling the current context (rather than playing in preset order). */
+    public static boolean isShuffled() {
+        return shuffledContextUri != null;
+    }
+
+    static void setStateObserver(Runnable observer) {
+        stateObserver = observer;
+    }
+
+    static void setShuffledContextUri(String contextUri) {
+        shuffledContextUri = contextUri;
+        Runnable observer = stateObserver;
+        if (observer != null) {
+            try {
+                observer.run();
+            } catch (Throwable e) {
+                Log.w("Spicetify", "Couldn't notify Shuffle+ state observer", e);
+            }
         }
     }
 
@@ -60,6 +101,27 @@ public final class ShufflePlus {
      */
     static <T> void fisherYates(List<T> list, Random random) {
         Collections.shuffle(list, random);
+    }
+
+    /**
+     * Now Playing's tap: toggles what's playing between Shuffle+ (true Fisher-Yates random order) and
+     * standard preset order (no mixing or shuffling of the playlist).
+     */
+    public static void toggleWhatsPlaying(Context context) {
+        toggleWhatsPlaying(context, RandomSong.LOADING_RETRY_MILLIS, RANDOM);
+    }
+
+    static void toggleWhatsPlaying(Context context, long loadingRetryMillis, Random random) {
+        run(context, null, loadingRetryMillis, random, Mode.TOGGLE);
+    }
+
+    /** Plays what's playing in its standard preset order, with Spotify's shuffle and mixing off. */
+    public static void playPresetOrderWhatsPlaying(Context context) {
+        playPresetOrderWhatsPlaying(context, RandomSong.LOADING_RETRY_MILLIS);
+    }
+
+    static void playPresetOrderWhatsPlaying(Context context, long loadingRetryMillis) {
+        run(context, null, loadingRetryMillis, RANDOM, Mode.PRESET);
     }
 
     /** Now Playing's long-press and its sheet's button: shuffles what's playing. It only posts the run. */
@@ -81,32 +143,40 @@ public final class ShufflePlus {
 
     /** Shuffles {@code contextUri}, or what's playing when it's null. */
     static void shuffle(Context context, String contextUri, long loadingRetryMillis, Random random) {
+        run(context, contextUri, loadingRetryMillis, random, Mode.SHUFFLE);
+    }
+
+    private static void run(Context context, String contextUri, long loadingRetryMillis, Random random, Mode mode) {
         try {
-            PlayerBridge.post(new Run(context.getApplicationContext(), contextUri, loadingRetryMillis, random)::start);
+            PlayerBridge.post(new Run(context.getApplicationContext(), contextUri, loadingRetryMillis, random, mode)::start);
         } catch (Throwable e) {
             Log.w("Spicetify", "Couldn't start Shuffle+", e);
         }
     }
 
     /**
-     * One shuffle of a list. Its steps run one at a time on the bridge thread: the first is posted
-     * there, a retry is posted there after its delay, and every other step runs in the last one's
-     * bridge callback. So the fields need no lock.
+     * One shuffle or preset-order run of a list. Its steps run one at a time on the bridge thread: the
+     * first is posted there, a retry is posted there after its delay, and every other step runs in the
+     * last one's bridge callback. So the fields need no lock.
      */
     private static final class Run {
         private final Context context;
         private final long loadingRetryMillis;
         private final Random random;
+        private final Mode mode;
         private final List<String> uris = new ArrayList<>();
         private String contextUri;
+        private String currentTrackUri;
+        private boolean shuffle;
         private int retries;
 
         /** A run of the list {@code contextUri}, or of what's playing when it's null. */
-        Run(Context context, String contextUri, long loadingRetryMillis, Random random) {
+        Run(Context context, String contextUri, long loadingRetryMillis, Random random, Mode mode) {
             this.context = context;
             this.contextUri = contextUri;
             this.loadingRetryMillis = loadingRetryMillis;
             this.random = random;
+            this.mode = mode;
         }
 
         /**
@@ -116,8 +186,11 @@ public final class ShufflePlus {
         void start() {
             if (!Extensions.isOn(context, Extensions.SHUFFLE_PLUS)) return;
             String asked = contextUri;
+            Esperanto.PlayerState state = PlayerBridge.lastState();
+            if (state != null) {
+                currentTrackUri = state.trackUri;
+            }
             if (asked == null) {
-                Esperanto.PlayerState state = PlayerBridge.lastState();
                 if (state == null) {
                     // ponytail: no stream is opened for one run. It's open while Shuffle+ is on, and the
                     // bridge opens again one that ended.
@@ -128,6 +201,7 @@ public final class ShufflePlus {
             }
             // Spotify plays any of Liked Songs' uris as the list's own, so the listing and Play both use that one.
             contextUri = Esperanto.isLikedSongs(asked) ? Esperanto.LIKED_SONGS : asked;
+            shuffle = mode == Mode.SHUFFLE || (mode == Mode.TOGGLE && !contextUri.equals(shuffledContextUri));
             if (contextUri.startsWith("spotify:playlist:")) {
                 list();
             } else if (contextUri.startsWith("spotify:album:")) {
@@ -161,21 +235,34 @@ public final class ShufflePlus {
             });
         }
 
-        /** Shuffles the list and plays it in that order. A refusal is told as one, and any other error ends the run. */
+        /**
+         * Shuffles the list (in Shuffle+ mode) or keeps its standard preset order (in preset mode) and
+         * plays it in that exact order with Spotify's own shuffle/mixing off.
+         */
         private void play() {
             if (uris.isEmpty()) {
                 RandomSong.tell(context, Extensions.SHUFFLE_PLUS, "Found no songs to shuffle");
                 return;
             }
-            fisherYates(uris, random);
-            call(Esperanto.CONTEXT_PLAYER, "Play", Esperanto.playOrder(contextUri, uris), body -> {
+            int firstTrackIndex = 0;
+            if (shuffle) {
+                fisherYates(uris, random);
+            } else if (currentTrackUri != null) {
+                int index = uris.indexOf(currentTrackUri);
+                if (index > 0) firstTrackIndex = index;
+            }
+            call(Esperanto.CONTEXT_PLAYER, "Play", Esperanto.playOrder(contextUri, uris, firstTrackIndex), body -> {
                 int error = Esperanto.parseResult(body);
                 if (error == Esperanto.FORBIDDEN) {
                     RandomSong.tell(context, Extensions.SHUFFLE_PLUS, REFUSED);
                 } else if (error != Esperanto.OK) {
                     throw new IOException("Spotify answered error " + error);
-                } else {
+                } else if (shuffle) {
+                    setShuffledContextUri(contextUri);
                     Extensions.status(Extensions.SHUFFLE_PLUS, "Shuffled " + uris.size() + " songs");
+                } else {
+                    setShuffledContextUri(null);
+                    Extensions.status(Extensions.SHUFFLE_PLUS, "Preset order (" + uris.size() + " songs)");
                 }
             });
         }

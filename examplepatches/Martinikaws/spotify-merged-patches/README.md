@@ -36,14 +36,14 @@ Spicetify extensions, Local files from a server, Hide Home and Browse ads, Hide 
 Hide player ad cards (off by default, configured in Spotify's Spicetify settings).
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.0.1](https://github.com/Martinikaws/spotify-merged-patches/releases/tag/v1.0.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;17 patches total
+> **[v1.2.0](https://github.com/Martinikaws/spotify-merged-patches/releases/tag/v1.2.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;17 patches total
 <details open>
 <summary>📦 Spotify&nbsp;&nbsp;•&nbsp;&nbsp;17 patches</summary>
 <br>
 
 **🎯 Supported versions:**
 
-| 🧪&nbsp;9.1.80.2221 |
+| 🧪&nbsp;9.1.94.1929 |
 | :---: |
 | Experimental Android customization patches; runtime compatibility is still being verified. |
 

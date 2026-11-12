@@ -41,12 +41,14 @@ import java.util.List;
 /** Snapshot of the native constructors, renderers, navigation, and DI traced for this build. */
 public final class NativeSettingsAbi {
     public static final List<String> TYPES = Arrays.asList(
-        "Lcom/spotify/music/SpotifyApplication;", "Lp/xlt;", "Lp/ion;", "Lp/yv80;",
-        "Lp/tdn;", "Lp/tcn;", "Lp/afr;", "Lp/rp60;", "Lp/rfr0;", "Lp/xh0;",
-        "Lp/tyh0;", "Lp/gtl;", "Lp/ftl;", "Lp/dtl;", "Lp/etl;", "Lp/qf60;",
-        "Lkotlin/jvm/functions/Function1;", "Lp/gke;", "Lp/k2u;", "Lp/osa0;",
-        "Lp/hka1;", "Lp/wgy0;", "Lp/dm70;", "Lp/s8;", "Lp/qte;", "Lp/pmy0;",
-        "Lp/cmy0;", "Lp/rk50;", "Lp/nsa0;", "Lp/gv90;", "Lp/abe1;", "Lp/c3g0;"
+        // Spotify 9.1.94.1929: the root page and its DI, the entry model classes SettingsBridge constructs,
+        // the renderer and navigator it wraps, and the analytics label constructor.
+        "Lcom/spotify/music/SpotifyApplication;", "Lp/k1a1;", "Lp/wbs;", "Lp/jsp;", "Lp/vod0;",
+        "Lp/y7q;", "Lp/x6q;", "Lp/jeu;", "Lp/l5b0;", "Lp/ssx0;", "Lp/fj0;",
+        "Lp/djf0;", "Lp/tbn0;", "Lp/ufo;", "Lp/tfo;", "Lp/rfo;", "Lp/sfo;", "Lp/qra0;",
+        "Lp/me30;", "Lp/dhk1;", "Lp/y9x;", "Lp/ugx;", "Lp/ttf;", "Lp/bjf0;",
+        "Lp/vcj1;", "Lp/mr51;", "Lp/r06;", "Lp/fdn1;", "Lp/m3f0;", "Lp/b3l0;",
+        "Lp/b3g1;", "Lp/v2g1;"
     );
 
     /**

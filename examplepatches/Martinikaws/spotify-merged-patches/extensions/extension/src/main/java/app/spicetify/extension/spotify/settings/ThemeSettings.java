@@ -80,6 +80,18 @@ final class ThemeSettings {
                         activity.refreshRestartBar();
                     });
         }
+        boolean picked = ThemeBackground.isCustom(activity);
+        SpotifyStyle.actionRow(content, picked ? "Change background image" : "Choose a background image",
+                "Show one of your own pictures behind Spotify's pages, with any theme",
+                view -> BackgroundPickerActivity.start(activity));
+        if (ThemeBackground.hasImage(activity)) {
+            SpotifyStyle.actionRow(content, "Remove background image",
+                    picked ? "Go back to the theme's plain background" : "Stop showing this theme's image",
+                    view -> {
+                        ThemeBackground.setCustom(activity, false);
+                        save(activity, content, "the plain background", current);
+                    });
+        }
         SpotifyStyle.actionRow(content, "Spicetify Marketplace", "Browse community themes and use their colors",
                 view -> activity.openPage(SpicetifySettingsScreen.PAGE_MARKETPLACE));
         SpotifyStyle.actionRow(content, "Paste a Spicetify theme", "Use a color.ini, or CSS with --spice-* colors",
@@ -352,7 +364,13 @@ final class ThemeSettings {
      * theme's colors.
      */
     static boolean apply(SpicetifySettingsScreen activity, String name, ThemeState.Selection theme, byte[] image) {
-        if (!ThemeRuntime.select(activity, theme, image)) {
+        // A theme that brings its own image replaces a picked one; any other theme keeps the picked image.
+        boolean keepPicked = image == null && ThemeBackground.isCustom(activity);
+        if (keepPicked) image = ThemeBackground.savedImage(activity);
+        if (image == null) keepPicked = false;
+        boolean selected = ThemeRuntime.select(activity, theme, image);
+        if (selected) ThemeBackground.setCustom(activity, keepPicked);
+        if (!selected) {
             new SpotifySheet(activity, "Colors not applied",
                     "Spotify could not load the new colors, so the theme is unchanged.")
                     .primary("OK", () -> true).show();

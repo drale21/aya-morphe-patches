@@ -26,18 +26,13 @@ private const val BRUSH = "Landroidx/compose/ui/graphics/Brush;"
 private val PUBLIC_STATIC_FINAL = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC, AccessFlags.FINAL)
 
 /** Compose's Color(Long), which turns an ARGB constant into a Compose color. */
-private const val COLOR = "Lp/iae1;->g(J)J"
+private const val COLOR = "Lp/tvn1;->d(J)J" // Spotify 9.1.94.1929; was Lp/iae1;->g(J)J
 
 /** Spotify's #282828 surface, as a constant. */
 private const val SURFACE = 0xFF282828L
 
 /** The static fields that keep a #282828 surface for two Compose screens, set when their class loads. */
-private val SURFACE_FIELDS = listOf("Lp/pz01;->a:J", "Lp/t5s0;->b:J")
-
-/** ProvideEncoreTheme, which picks the Encore palette for a theme and provides it. */
-internal object ProvideEncoreThemeFingerprint : Fingerprint(
-    filters = listOf(string("EncoreLayoutTheme: Invalid screen dimensions (")),
-)
+private val SURFACE_FIELDS = listOf("Lp/he81;->a:J", "Lp/lmy0;->b:J") // 9.1.94.1929; were Lp/pz01;->a, Lp/t5s0;->b
 
 /** The merged lambda holding the default value of the Encore palette's CompositionLocal. */
 internal object EncoreThemeDefaultsFingerprint : Fingerprint(
@@ -46,11 +41,22 @@ internal object EncoreThemeDefaultsFingerprint : Fingerprint(
     ),
 )
 
-/** The static initializer of Encore's raw colors: the only method with these three grays. */
-internal object EncoreRawColorsFingerprint : Fingerprint(
-    accessFlags = listOf(AccessFlags.STATIC, AccessFlags.CONSTRUCTOR),
+/**
+ * The constructor of Encore's raw grays: the only method with these three grays. Spotify 9.1.94.1929 builds
+ * each raw color group in its own class's constructor; 9.1.80.2221 built them all in the holder's static
+ * initializer, which this fingerprint used to match directly.
+ */
+internal object EncoreRawGraysFingerprint : Fingerprint(
+    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.CONSTRUCTOR),
     parameters = listOf(),
     filters = listOf(literal(0xFF181818L), literal(0xFF333333L), literal(0xFF535353L)),
+)
+
+/** The static initializer that builds the raw color groups, [grays] among them, and stores their holder. */
+private fun rawColorsHolderFingerprint(grays: String) = Fingerprint(
+    accessFlags = listOf(AccessFlags.STATIC, AccessFlags.CONSTRUCTOR),
+    parameters = listOf(),
+    filters = listOf(methodCall(definingClass = grays, name = "<init>")),
 )
 
 /**
@@ -94,15 +100,22 @@ internal val themeComposePatch = bytecodePatch {
 
         // The palette getters in ProvideEncoreTheme's theme switch all return the palette type, and the
         // default dark palette is the one case read from a static field.
-        val provide = ProvideEncoreThemeFingerprint.matchAll(1..1).single().method
-        val paletteType = provide.implementation!!.instructions
-            .mapNotNull { (it as? ReferenceInstruction)?.reference as? MethodReference }
-            .filter { it.parameterTypes.isEmpty() && it.returnType.startsWith("L") }
-            .groupingBy { it.returnType }.eachCount().maxByOrNull { it.value }?.key
-            ?: throw PatchException("Encore palette type not found.")
-        val darkPalette = provide.staticReads().singleOrNull { it.value.type == paletteType }?.value
-            ?: throw PatchException("Expected one static read of Spotify's default Encore palette.")
+        // Spotify 9.1.94.1929 moved the theme switch out of ProvideEncoreTheme, which now only handles the
+        // layout theme, into its own static function: palette(themeId). So the default dark palette is found
+        // from the CompositionLocal's default first. That lambda reads several singletons, whose fields have
+        // their own class as type; the palette's holder is the one static whose type is another class.
         val defaults = EncoreThemeDefaultsFingerprint.matchAll(1..1).single().method
+        // Encore's classes are all obfuscated into p/; 9.1.94.1929's lambda also reads Mobius's WorkRunners.
+        val darkPalette = defaults.staticReads().map { it.value }.distinct()
+            .singleOrNull { it.type != it.definingClass && it.type.startsWith("Lp/") && it.definingClass.startsWith("Lp/") }
+            ?: throw PatchException("Expected one static read of Spotify's default Encore palette.")
+        val paletteType = darkPalette.type
+        val provide = Fingerprint(
+            accessFlags = PUBLIC_STATIC_FINAL,
+            returnType = paletteType,
+            parameters = listOf("I"),
+            filters = listOf(fieldAccess(darkPalette, Opcode.SGET_OBJECT)),
+        ).matchAll(1..1).single().method
         for (method in listOf(provide, defaults)) {
             val read = method.staticReads().singleOrNull { it.value == darkPalette }
                 ?: throw PatchException("Expected one read of $darkPalette in ${method.definingClass}.")
@@ -115,7 +128,8 @@ internal val themeComposePatch = bytecodePatch {
             """)
         }
 
-        val rawColors = EncoreRawColorsFingerprint.matchAll(1..1).single().method
+        val grays = EncoreRawGraysFingerprint.matchAll(1..1).single().method.definingClass
+        val rawColors = rawColorsHolderFingerprint(grays).matchAll(1..1).single().method
         val store = rawColors.implementation!!.instructions.withIndex().singleOrNull { (_, instruction) ->
             instruction.opcode == Opcode.SPUT_OBJECT &&
                 ((instruction as ReferenceInstruction).reference as FieldReference).definingClass == rawColors.definingClass

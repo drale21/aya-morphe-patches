@@ -36,4 +36,23 @@ object Constants {
             )
         )
     )
+
+    val COMPATIBILITY_SHOHAY = Compatibility(
+        name = "Shohay Pregnancy Health",
+        packageName = "health.shohay.pregnancy",
+        // Distributed as a split bundle (.apks): base + arm64 + en + xxhdpi.
+        apkFileType = ApkFileType.APKM,
+        appIconColor = 0xE91E63,
+        targets = listOf(
+            // Version the MicroG RE login + premium patches were developed
+            // and verified against (hand-built v6 .apks, confirmed working
+            // on device 2026-11-11).
+            AppTarget(
+                version = "2.1.1",
+                versionCodes = mapOf(
+                    SupportedAbi.ARM64_V8A to 179
+                )
+            )
+        )
+    )
 }

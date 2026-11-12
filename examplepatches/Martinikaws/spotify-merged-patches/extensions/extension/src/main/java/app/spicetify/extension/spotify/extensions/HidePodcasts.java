@@ -131,18 +131,18 @@ public final class HidePodcasts {
         }
     }
 
-    /** P5, {@code Lp/ipy;-><init>}: Search's filter chips without Podcasts and, with audiobooks hidden, Audiobooks. */
+    /** P5, {@code Lp/ja20;-><init>}: Search's filter chips without Podcasts and, with audiobooks hidden, Audiobooks. */
     public static ArrayList<?> filterSearchChips(ArrayList<?> chips) {
         try {
             Context context = on();
             if (context == null) return chips;
             boolean audiobooks = audiobooksHidden(context);
             return (ArrayList<?>) without(chips, SEARCH_CHIPS, chip -> {
-                Object type = chip.getClass().getField("b").get(chip); // Lp/gpy;->b, an Lp/fpy;
+                Object type = chip.getClass().getField("b").get(chip); // Lp/ha20;->b, an Lp/ga20;
                 if (type == null) return false;
                 String kind = type.getClass().getName();
-                if (kind.equals("p.cpy")) return type.getClass().getField("a").getInt(type) == 2; // PODCAST_AND_EPISODES
-                return audiobooks && kind.equals("p.dpy") && type.getClass().getField("a").getInt(type) == 3; // AUDIOBOOK
+                if (kind.equals("p.da20")) return type.getClass().getField("a").getInt(type) == 2; // PODCAST_AND_EPISODES
+                return audiobooks && kind.equals("p.ea20") && type.getClass().getField("a").getInt(type) == 3; // AUDIOBOOK
             });
         } catch (Throwable e) {
             failed(SEARCH_CHIPS, e);

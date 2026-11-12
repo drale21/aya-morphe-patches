@@ -20,7 +20,7 @@ import org.json.JSONObject;
  */
 public final class HomePins {
     private static final int MAX_SHORTCUTS = 64;
-    /** Spotify's own cap on the shortcuts grid: Lp/jne1;->u takes 10 tiles before the hook sees them. */
+    /** Spotify's own cap on the shortcuts grid: Lp/ann1;->u takes 10 tiles before the hook sees them. */
     private static final int MAX_TILES = 10;
     private static SharedPreferences preferences;
     private static boolean onlyPins;
@@ -191,9 +191,9 @@ public final class HomePins {
         try {
             for (int i = 0; i < rows.size(); i++) {
                 Object row = rows.get(i);
-                if (row == null || !row.getClass().getName().equals("p.goz0")) return null;
+                if (row == null || !row.getClass().getName().equals("p.x071")) return null;
                 Object tile = row.getClass().getField("a").get(row);
-                if (tile == null || !tile.getClass().getName().equals("p.nnz0")) return null;
+                if (tile == null || !tile.getClass().getName().equals("p.i071")) return null;
                 links[i] = key((String) tile.getClass().getField("a").get(tile));
                 ids[i] = key((String) tile.getClass().getField("d").get(tile));
                 titles[i] = (String) tile.getClass().getField("b").get(tile);

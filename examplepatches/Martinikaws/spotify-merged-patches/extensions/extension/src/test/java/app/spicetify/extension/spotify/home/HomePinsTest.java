@@ -471,13 +471,13 @@ public class HomePinsTest {
     }
 
     /** Spotify's row for a tile that opens {@code uri} and stands for it. */
-    private static p.goz0 row(String uri, String title) {
+    private static p.x071 row(String uri, String title) {
         return row(uri, uri, title);
     }
 
     /** Spotify's row for a tile that opens {@code link} and stands for {@code entity}, hidable as a shortcut. */
-    private static p.goz0 row(String link, String entity, String title) {
-        return new p.goz0(new p.nnz0(link, 2, title, "spotify:image:" + title, false, entity));
+    private static p.x071 row(String link, String entity, String title) {
+        return new p.x071(new p.i071(link, 2, title, "spotify:image:" + title, false, entity));
     }
 
     private static ArrayList<Object> rows(Object... rows) {
@@ -489,7 +489,7 @@ public class HomePinsTest {
         List<String> entries = new ArrayList<>();
         for (Object entry : plan) {
             if (entry instanceof String[]) entries.add("new " + ((String[]) entry)[1]);
-            else entries.add(rows.contains(entry) ? ((p.goz0) entry).a.b : "a row Spotify didn't send");
+            else entries.add(rows.contains(entry) ? ((p.x071) entry).a.b : "a row Spotify didn't send");
         }
         return entries;
     }

@@ -29,6 +29,7 @@ public final class ThemeBackground {
     private static final String FILE = "spicetify_background";
     private static final String PREFERENCES = "spicetify_theme";
     private static final String BLUR = "background_blur";
+    private static final String CUSTOM = "background_custom";
     /** Half black over the image, so text on it stays readable, as Galaxy darkens its backgrounds. */
     private static final int SCRIM = 0x80000000;
     /** The blur works on a copy no larger than this on either side, which drawing scales up; blurred, it loses nothing. */
@@ -69,6 +70,36 @@ public final class ThemeBackground {
 
     public static boolean blurEnabled(Context context) {
         return preferences(context).getBoolean(BLUR, false);
+    }
+
+    /**
+     * Whether the saved image is one the user picked, not one a Marketplace theme brought. A picked image
+     * stays when the theme changes; a theme's own image goes with its theme.
+     */
+    public static boolean isCustom(Context context) {
+        return hasImage(context) && preferences(context).getBoolean(CUSTOM, false);
+    }
+
+    public static void setCustom(Context context, boolean custom) {
+        preferences(context).edit().putBoolean(CUSTOM, custom).apply();
+    }
+
+    /** The saved image's bytes, already at about screen size, or null when none is saved or it can't be read. */
+    public static byte[] savedImage(Context context) {
+        File file = new File(context.getFilesDir(), FILE);
+        if (!file.exists() || file.length() > Integer.MAX_VALUE) return null;
+        byte[] bytes = new byte[(int) file.length()];
+        try (java.io.FileInputStream input = new java.io.FileInputStream(file)) {
+            int read = 0;
+            while (read < bytes.length) {
+                int count = input.read(bytes, read, bytes.length - read);
+                if (count < 0) return null;
+                read += count;
+            }
+            return bytes;
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     /** Saves the choice; Spotify's screen takes it when it's created again. */

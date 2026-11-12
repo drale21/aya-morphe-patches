@@ -16,6 +16,17 @@ private var composeTableForExtension: String? = null
 
 private val themeResourcesPatch = resourcePatch {
     execute {
+        // The picker for a background picture of the user's own: the settings pages are dialogs, which can't
+        // receive a picker's result. A root mount install keeps the stock manifest and says so instead.
+        document("AndroidManifest.xml").use { manifest ->
+            val android = "http://schemas.android.com/apk/res/android"
+            val picker = manifest.createElement("activity")
+            picker.setAttributeNS(android, "android:name", "app.spicetify.extension.spotify.settings.BackgroundPickerActivity")
+            picker.setAttributeNS(android, "android:exported", "false")
+            picker.setAttributeNS(android, "android:theme", "@android:style/Theme.Translucent.NoTitleBar")
+            picker.setAttributeNS(android, "android:excludeFromRecents", "true")
+            manifest.getElementsByTagName("application").item(0).appendChild(picker)
+        }
         val roleMap = loadRoleMap()
         // Read-only: the colors keep their stock values; only overlayable.xml changes.
         val colors = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(get("res/values/colors.xml"))

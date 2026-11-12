@@ -3,7 +3,7 @@ group = "app.template"
 patches {
     about {
         name = "Viper Patches"
-        description = "Patches for apps I like: SAI Premium unlock and APKS Installer ad removal."
+        description = "Patches for apps I like: SAI Premium unlock, APKS Installer ad removal, and Shohay Pregnancy Health (MicroG RE Google Sign-In + Premium unlock)."
         source = "git@github.com:viper/morphe-patches.git"
         author = "Viper"
         contact = "na"

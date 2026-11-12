@@ -181,6 +181,14 @@ final class Esperanto {
      * first, with Spotify's own shuffle off.
      */
     static byte[] playOrder(String contextUri, List<String> trackUris) {
+        return playOrder(contextUri, trackUris, 0);
+    }
+
+    /**
+     * Plays {@code trackUris} in that exact order, as one explicit page of {@code contextUri}, starting at
+     * {@code firstTrackIndex}, with Spotify's own shuffle off.
+     */
+    static byte[] playOrder(String contextUri, List<String> trackUris, int firstTrackIndex) {
         Wire.Writer page = new Wire.Writer();
         for (String trackUri : trackUris) {
             Wire.Writer track = new Wire.Writer();
@@ -193,7 +201,7 @@ final class Esperanto {
         context.string(3, contextUri);
 
         Wire.Writer trackIndex = new Wire.Writer();
-        trackIndex.varint(1, 0);
+        trackIndex.varint(1, Math.max(0, firstTrackIndex));
         Wire.Writer skipTo = new Wire.Writer();
         skipTo.message(5, trackIndex);
         Wire.Writer shufflingContext = new Wire.Writer();

@@ -19,10 +19,10 @@ class VerifyExtensionsDexTest {
     static final String CHIPS = VerifyExtensionsDex.CHIP_BRIDGE;
     static final String SHUFFLE = VerifyExtensionsDex.NOW_PLAYING_SHUFFLE;
     static final String PROVIDER = VerifyExtensionsDex.PLAYLIST_MENU_PROVIDER;
-    static final List<String> LIST_MENU = List.of("Lp/y3w0;", "Lp/vz1;", "Ljava/util/List;", "Ljava/util/List;", "Lp/a94;");
+    static final List<String> LIST_MENU = List.of("Lp/w531;", "Lp/w2m;", "Ljava/util/List;", "Ljava/util/List;", "Lp/im4;");
     static final String FILTERS = VerifyExtensionsDex.HIDE_PODCASTS;
     static final String OBJECT = "Ljava/lang/Object;", LIST = "Ljava/util/List;", ARRAY_LIST = "Ljava/util/ArrayList;";
-    static final String CHIP_BUILDER = "Lp/k770;";
+    static final String CHIP_BUILDER = "Lp/pnb0;";
 
     enum Change {
         NONE, NO_HOOKS, MISSING_HOOK, SECOND_HOOK, WRONG_CALLER, WRONG_REGISTER, BEFORE_SCHEDULING, PRIVATE_TARGET,
@@ -149,9 +149,9 @@ class VerifyExtensionsDexTest {
         classes.add(definition(VerifyExtensionsDex.BRIDGE, target(VerifyExtensionsDex.BRIDGE, "onCosmos",
             List.of("Ljava/lang/Object;"), "V", change == Change.PRIVATE_TARGET ? 0x0a : 0x09)));
         boolean moved = change == Change.TRACK_IN_ANOTHER_CLASS;
-        classes.add(definition("Lp/b9p0;", menu("Lp/b9p0;", moved ? Change.MISSING_TRACK_HOOK : change, false)));
-        if (moved) classes.add(definition("Lp/other;", menu("Lp/other;", Change.NONE, false)));
-        classes.add(definition("Lp/lr5;", menu("Lp/lr5;", change, true)));
+        classes.add(definition("Lp/goe1;", menu("Lp/goe1;", "apply", moved ? Change.MISSING_TRACK_HOOK : change, false)));
+        if (moved) classes.add(definition("Lp/other;", menu("Lp/other;", "apply", Change.NONE, false)));
+        classes.add(definition("Lp/uo6;", menu("Lp/uo6;", "invokeSuspend", change, true)));
         if (change != Change.MISSING_MENU_TARGET) {
             classes.add(new ImmutableClassDef(MENUS, 1, "Ljava/lang/Object;", List.of(), null, Set.of(), List.of(), List.of(
                 target(MENUS, "track", List.of("Ljava/util/List;", "Ljava/lang/Object;"), "Ljava/util/List;",
@@ -162,10 +162,10 @@ class VerifyExtensionsDexTest {
         classes.add(definition(VerifyExtensionsDex.INSTALLED, method(VerifyExtensionsDex.INSTALLED, "extensions", List.of(), "Z",
             0x09, 1, List.of(new ImmutableInstruction11n(Opcode.CONST_4, 0, capability ? 1 : 0), new ImmutableInstruction11x(Opcode.RETURN, 0)))));
         boolean chipsMoved = change == Change.CHIPS_IN_ANOTHER_CLASS;
-        classes.add(definition("Lp/qrl;", feeds("Lp/qrl;", chipsMoved ? Change.MISSING_CHIPS_HOOK : change)));
+        classes.add(definition("Lp/djw;", feeds("Lp/djw;", chipsMoved ? Change.MISSING_CHIPS_HOOK : change)));
         if (chipsMoved) classes.add(definition("Lp/elsewhere;", feeds("Lp/elsewhere;", Change.NONE)));
         boolean tapMoved = change == Change.TAP_IN_ANOTHER_CLASS;
-        classes.add(definition("Lp/a4v;", chipEvents("Lp/a4v;", tapMoved ? Change.MISSING_TAP_HOOK : change)));
+        classes.add(definition("Lp/jfy;", chipEvents("Lp/jfy;", tapMoved ? Change.MISSING_TAP_HOOK : change)));
         if (tapMoved) classes.add(definition("Lp/somewhere;", chipEvents("Lp/somewhere;", Change.NONE)));
         if (change != Change.MISSING_CHIP_TARGET) {
             classes.add(new ImmutableClassDef(CHIPS, 1, "Ljava/lang/Object;", List.of(), null, Set.of(), List.of(), List.of(
@@ -174,14 +174,14 @@ class VerifyExtensionsDexTest {
                     2, List.of(new ImmutableInstruction11n(Opcode.CONST_4, 0, 0), new ImmutableInstruction11x(Opcode.RETURN, 0))))));
         }
         boolean buttonMoved = change == Change.SHUFFLE_IN_ANOTHER_CLASS;
-        classes.add(shuffleButton("Lp/xkp;", buttonMoved ? Change.MISSING_SHUFFLE_HOOK : change));
+        classes.add(shuffleButton("Lp/aes;", buttonMoved ? Change.MISSING_SHUFFLE_HOOK : change));
         if (buttonMoved) classes.add(shuffleButton("Lp/otherbutton;", Change.NONE));
         if (change != Change.MISSING_SHUFFLE_TARGET) {
             classes.add(definition(SHUFFLE, target(SHUFFLE, "onButton", List.of("Landroid/view/View;"), "V",
                 change == Change.PRIVATE_SHUFFLE_TARGET ? 0x0a : 0x09)));
         }
         boolean menuMoved = change == Change.PROVIDERS_IN_ANOTHER_CLASS;
-        classes.add(listMenu("Lp/sv70;", menuMoved ? Change.MISSING_PROVIDERS_HOOK : change));
+        classes.add(listMenu("Lp/kfc0;", menuMoved ? Change.MISSING_PROVIDERS_HOOK : change));
         if (menuMoved) classes.add(listMenu("Lp/othermenu;", Change.NONE));
         if (change != Change.MISSING_PROVIDERS_TARGET) {
             classes.add(definition(PROVIDER, target(PROVIDER, "providers", List.of("Ljava/util/List;"), "Ljava/util/List;",
@@ -190,7 +190,7 @@ class VerifyExtensionsDexTest {
         classes.addAll(podcastFilters(change));
         if (change == Change.SECOND_HOOK || change == Change.WRONG_CALLER) {
             classes.add(definition("Lp/other;", method("Lp/other;", "run", List.of(), "V", 0x09, 4,
-                List.of(schedule(), bridgeHook(1), new ImmutableInstruction10x(Opcode.RETURN_VOID)))));
+                List.of(nativeRouterStore(1), bridgeHook(1), new ImmutableInstruction10x(Opcode.RETURN_VOID)))));
         }
         var dex = Files.createTempFile("extensions-verifier-", ".dex");
         try {
@@ -209,10 +209,10 @@ class VerifyExtensionsDexTest {
     List<ImmutableClassDef> podcastFilters(Change change) {
         boolean hooked = !unhooked(change) && change != Change.BRIDGE_ONLY;
         var classes = new ArrayList<ImmutableClassDef>();
-        // P1: g0(Section), 6 registers, so this is v4 and the section v5.
+        // P1: o(Section), 6 registers, so this is v4 and the section v5.
         var section = new ArrayList<Instruction>();
         var mapping = List.of(new ImmutableInstruction35c(Opcode.INVOKE_VIRTUAL, 2, 4, 5, 0, 0, 0,
-                new ImmutableMethodReference("Lp/mz1;", "O", List.of("Lcom/spotify/casita/v1/resolved/Section;"), "Lp/n920;")),
+                new ImmutableMethodReference("Lp/dfs;", "k", List.of("Lcom/spotify/casita/v1/resolved/Section;"), "Lp/v760;")),
             new ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, 0));
         if (change == Change.GATE_AFTER_MAPPING) section.addAll(mapping);
         if (hooked && change != Change.FILTER_ELSEWHERE) {
@@ -220,16 +220,16 @@ class VerifyExtensionsDexTest {
         }
         if (change != Change.GATE_AFTER_MAPPING) section.addAll(mapping);
         section.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 0));
-        classes.add(definition("Lp/mz1;", method("Lp/mz1;", "g0", List.of("Lcom/spotify/casita/v1/resolved/Section;"),
-            "Lp/n920;", 0x01, 6, section)));
+        classes.add(definition("Lp/dfs;", method("Lp/dfs;", "o", List.of("Lcom/spotify/casita/v1/resolved/Section;"),
+            "Lp/v760;", 0x01, 6, section)));
         if (change == Change.FILTER_ELSEWHERE) {
-            classes.add(definition("Lp/other;", method("Lp/other;", "g0", List.of("Lcom/spotify/casita/v1/resolved/Section;"),
-                "Lp/n920;", 0x01, 6, gate("hideHomeSection", 5, true, change))));
+            classes.add(definition("Lp/other;", method("Lp/other;", "o", List.of("Lcom/spotify/casita/v1/resolved/Section;"),
+                "Lp/v760;", 0x01, 6, gate("hideHomeSection", 5, true, change))));
         }
         // P2: Provided.getItemsList(), 2 registers: the items in v0, this in v1.
         var items = new ArrayList<Instruction>();
         var field = new ImmutableInstruction22c(Opcode.IGET_OBJECT, 0, 1,
-            new ImmutableFieldReference("Lcom/spotify/casita/v1/resolved/Provided;", "items_", "Lp/ih40;"));
+            new ImmutableFieldReference("Lcom/spotify/casita/v1/resolved/Provided;", "items_", "Lp/pl80;"));
         boolean early = change == Change.ITEMS_BEFORE_THEIR_FIELD;
         if (!early) items.add(field);
         if (hooked) items.addAll(filter("filterHomeItems", LIST, LIST, 0, 0));
@@ -237,21 +237,21 @@ class VerifyExtensionsDexTest {
         items.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 0));
         classes.add(definition("Lcom/spotify/casita/v1/resolved/Provided;", method("Lcom/spotify/casita/v1/resolved/Provided;",
             "getItemsList", List.of(), LIST, 0x11, 2, items)));
-        // P3: the static xqw.a(List), 12 registers, so the chips are v11.
+        // P3: the static b500.a(List), 12 registers, so the chips are v11.
         var homeChips = new ArrayList<Instruction>();
         if (hooked) homeChips.addAll(filter("filterHomeChips", change == Change.FILTER_WRONG_SIGNATURE ? "Ljava/util/Collection;" : LIST,
             LIST, 11, change == Change.FILTER_RESULT_DROPPED ? 0 : 11));
         homeChips.add(new ImmutableInstruction21c(Opcode.NEW_INSTANCE, 0, new ImmutableTypeReference(ARRAY_LIST)));
         homeChips.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 0));
-        classes.add(definition("Lp/xqw;", method("Lp/xqw;", "a", List.of(LIST), ARRAY_LIST, 0x19, 12, homeChips)));
-        // P4: bzw0.b(Entity), 48 registers, so the entity is v47, past what invoke-static can name.
+        classes.add(definition("Lp/b500;", method("Lp/b500;", "a", List.of(LIST), ARRAY_LIST, 0x19, 12, homeChips)));
+        // P4: q141.b(Entity), 48 registers, so the entity is v47, past what invoke-static can name.
         var entity = new ArrayList<Instruction>();
         if (hooked) entity.addAll(gate("hideSearchEntity", 47, true, change));
         entity.add(new ImmutableInstruction22x(Opcode.MOVE_OBJECT_FROM16, 0, 46));
         entity.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 0));
-        classes.add(definition("Lp/bzw0;", method("Lp/bzw0;", "b", List.of("Lcom/spotify/searchview/proto/Entity;"),
-            "Lp/onu;", 0x11, 48, entity)));
-        // P5: ipy's constructor, 2 registers: this in v0, the chips in v1.
+        classes.add(definition("Lp/q141;", method("Lp/q141;", "b", List.of("Lcom/spotify/searchview/proto/Entity;"),
+            "Lp/yxx;", 0x11, 48, entity)));
+        // P5: ja20's constructor, 2 registers: this in v0, the chips in v1.
         var searchChips = new ArrayList<Instruction>();
         var init = new ImmutableInstruction35c(Opcode.INVOKE_DIRECT, 1, 0, 0, 0, 0, 0,
             new ImmutableMethodReference(OBJECT, "<init>", List.of(), "V"));
@@ -259,21 +259,21 @@ class VerifyExtensionsDexTest {
         if (!beforeSuper) searchChips.add(init);
         if (hooked) searchChips.addAll(filter("filterSearchChips", ARRAY_LIST, ARRAY_LIST, 1, 1));
         if (beforeSuper) searchChips.add(init);
-        searchChips.add(new ImmutableInstruction22c(Opcode.IPUT_OBJECT, 1, 0, new ImmutableFieldReference("Lp/ipy;", "a", ARRAY_LIST)));
+        searchChips.add(new ImmutableInstruction22c(Opcode.IPUT_OBJECT, 1, 0, new ImmutableFieldReference("Lp/ja20;", "a", ARRAY_LIST)));
         searchChips.add(new ImmutableInstruction10x(Opcode.RETURN_VOID));
-        classes.add(definition("Lp/ipy;", method("Lp/ipy;", "<init>", List.of(ARRAY_LIST), "V", 0x10001, 2, searchChips)));
-        // P6: b90.invoke, 15 registers, where the chip builder's list lands in v8 on its way to Lp/j290;.
+        classes.add(definition("Lp/ja20;", method("Lp/ja20;", "<init>", List.of(ARRAY_LIST), "V", 0x10001, 2, searchChips)));
+        // P6: ops.invoke, 16 registers, where the chip builder's list lands in v9 on its way to Lp/wpd0;.
         var libraryChips = new ArrayList<Instruction>();
-        var build = List.of(new ImmutableInstruction3rc(Opcode.INVOKE_INTERFACE_RANGE, 6, 6, new ImmutableMethodReference(
+        var build = List.of(new ImmutableInstruction3rc(Opcode.INVOKE_INTERFACE_RANGE, 7, 6, new ImmutableMethodReference(
                 CHIP_BUILDER, "a", List.of("Z", "Z", "Lspotify/your_library/esperanto/proto/YourLibraryResponseHeader;", LIST, LIST), LIST)),
-            new ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, 8));
+            new ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, 9));
         boolean beforeBuilder = change == Change.CHIPS_BEFORE_THE_BUILDER;
         if (!beforeBuilder) libraryChips.addAll(build);
-        if (hooked && change != Change.MISSING_FILTER) libraryChips.addAll(filter("filterLibraryChips", LIST, LIST, 8, 8));
-        if (change == Change.SECOND_FILTER) libraryChips.addAll(filter("filterLibraryChips", LIST, LIST, 8, 8));
+        if (hooked && change != Change.MISSING_FILTER) libraryChips.addAll(filter("filterLibraryChips", LIST, LIST, 9, 9));
+        if (change == Change.SECOND_FILTER) libraryChips.addAll(filter("filterLibraryChips", LIST, LIST, 9, 9));
         if (beforeBuilder) libraryChips.addAll(build);
-        libraryChips.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 8));
-        classes.add(definition("Lp/b90;", method("Lp/b90;", "invoke", List.of(OBJECT, OBJECT), OBJECT, 0x11, 15, libraryChips)));
+        libraryChips.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 9));
+        classes.add(definition("Lp/ops;", method("Lp/ops;", "invoke", List.of(OBJECT, OBJECT), OBJECT, 0x11, 16, libraryChips)));
         // The extension's own settings call HidePodcasts too, for the audiobook switch, in every APK the settings
         // patch builds. Those calls aren't hooks.
         var settings = "Lapp/spicetify/extension/spotify/settings/ExtensionSettings;";
@@ -320,35 +320,37 @@ class VerifyExtensionsDexTest {
             || change == Change.ONLY_FILTERS;
         List<Instruction> code = new ArrayList<>();
         if (change == Change.BEFORE_SCHEDULING) code.add(bridgeHook(1));
-        code.add(schedule());
+        code.add(nativeRouterStore(1));
         if (!withoutHook && change != Change.BEFORE_SCHEDULING) code.add(bridgeHook(change == Change.WRONG_REGISTER ? 2 : 1));
+        code.add(schedule());
         code.add(new ImmutableInstruction10x(Opcode.RETURN_VOID));
         return method(VerifyExtensionsDex.SERVICE, "<init>",
-            List.of("Lp/ddk;", "Lcom/spotify/cosmos/servicebasedrouter/RemoteNativeRouter;"), "V", 0x10001, 4, code);
+            List.of("Lp/axm;", "Lcom/spotify/cosmos/servicebasedrouter/RemoteNativeRouter;"), "V", 0x10001, 4, code);
     }
 
     /**
-     * A menu builder's apply: the frozen list lands in v0, the menu bridge replaces it, and the menu model
-     * is built from it. The track menu's row is v11, and the artist menu's is v22, moved to v1 first.
+     * A menu builder's apply/invokeSuspend: the frozen list lands in v0, the entity (v34 for track, v40 for
+     * artist) is moved to v1, the menu bridge replaces the list in v0, and the menu model is built from it.
      */
-    ImmutableMethod menu(String owner, Change change, boolean artist) {
+    ImmutableMethod menu(String owner, String methodName, Change change, boolean artist) {
         boolean asArtist = artist || change == Change.ARTIST_IN_TRACK_MENU;
         String name = asArtist ? "artist" : "track";
         List<Instruction> hook = new ArrayList<>();
-        if (asArtist && change != Change.ARTIST_WITHOUT_ITS_ROW) {
-            hook.add(new ImmutableInstruction22x(Opcode.MOVE_OBJECT_FROM16, 1, change == Change.ARTIST_FROM_ANOTHER_ROW ? 21 : 22));
+        if (!asArtist || change != Change.ARTIST_WITHOUT_ITS_ROW) {
+            int source = asArtist ? (change == Change.ARTIST_FROM_ANOTHER_ROW ? 39 : 40)
+                : (change == Change.TRACK_PASSES_ANOTHER_ROW ? 33 : 34);
+            hook.add(new ImmutableInstruction22x(Opcode.MOVE_OBJECT_FROM16, 1, source));
         }
-        int row = asArtist ? 1 : change == Change.TRACK_PASSES_ANOTHER_ROW ? 12 : 11;
-        hook.add(new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 2, 0, row, 0, 0, 0,
+        hook.add(new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 2, 0, 1, 0, 0, 0,
             new ImmutableMethodReference(MENUS, name, List.of("Ljava/util/List;", "Ljava/lang/Object;"), "Ljava/util/List;")));
         hook.add(new ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, change == Change.TRACK_RESULT_DROPPED && !artist ? 2 : 0));
         var freeze = List.of(
             new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 1, 13, 0, 0, 0, 0, new ImmutableMethodReference(
-                change == Change.TRACK_AFTER_ANOTHER_LIST && !artist ? "Lp/other;" : "Lp/qte;", "J",
-                List.of("Ljava/util/List;"), "Lp/dm70;")),
+                change == Change.TRACK_AFTER_ANOTHER_LIST && !artist ? "Lp/other;" : "Lp/hvn1;", "h",
+                List.of("Ljava/util/List;"), "Lp/k5c0;")),
             new ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, 0));
         var model = new ImmutableInstruction21c(Opcode.NEW_INSTANCE, 1, new ImmutableTypeReference(
-            change == Change.TRACK_BEFORE_ANOTHER_MODEL && !artist ? "Lp/other;" : "Lp/krj;"));
+            change == Change.TRACK_BEFORE_ANOTHER_MODEL && !artist ? "Lp/other;" : "Lp/o8m;"));
         boolean hooked = !unhooked(change) && change != Change.ONLY_FILTERS && change != Change.BRIDGE_ONLY
             && !(change == Change.MISSING_TRACK_HOOK && !artist);
         boolean moved = !artist && (change == Change.TRACK_BEFORE_FREEZE || change == Change.TRACK_AFTER_MODEL);
@@ -359,7 +361,7 @@ class VerifyExtensionsDexTest {
         code.add(model);
         if (hooked && moved && change == Change.TRACK_AFTER_MODEL) code.addAll(hook);
         code.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 0));
-        return method(owner, "apply", List.of("Ljava/lang/Object;"), "Ljava/lang/Object;", 0x01, 24, code);
+        return method(owner, methodName, List.of("Ljava/lang/Object;"), "Ljava/lang/Object;", 0x01, 44, code);
     }
 
     /** A build without the patch: no hooks, whatever its capability says. */
@@ -368,20 +370,20 @@ class VerifyExtensionsDexTest {
     }
 
     /**
-     * Home's feed mapping, Lp/qrl;->invokeSuspend: Lp/xqw;->a rewrites the chips into v1, the chip bridge
-     * replaces them in v1, and a new ArrayList copies them.
+     * Home's feed mapping, Lp/djw;->z: Lp/b500;->a rewrites the chips into v4, the chip bridge
+     * replaces them in v4, and a new ArrayList in v5 copies them.
      */
     ImmutableMethod feeds(String owner, Change change) {
         var rewrite = List.of(
             new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 1, 2, 0, 0, 0, 0, new ImmutableMethodReference(
-                change == Change.CHIPS_AFTER_ANOTHER_CALL ? "Lp/other;" : "Lp/xqw;", "a", List.of("Ljava/util/List;"),
+                change == Change.CHIPS_AFTER_ANOTHER_CALL ? "Lp/other;" : "Lp/b500;", "a", List.of("Ljava/util/List;"),
                 "Ljava/util/ArrayList;")),
-            new ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, 1));
+            new ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, 4));
         var hook = List.of(
-            new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 1, change == Change.CHIPS_PASS_ANOTHER_REGISTER ? 2 : 1, 0, 0, 0, 0,
+            new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 1, change == Change.CHIPS_PASS_ANOTHER_REGISTER ? 2 : 4, 0, 0, 0, 0,
                 new ImmutableMethodReference(CHIPS, "chips", List.of("Ljava/util/List;"), "Ljava/util/List;")),
-            new ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, change == Change.CHIPS_RESULT_DROPPED ? 0 : 1));
-        var copy = new ImmutableInstruction21c(Opcode.NEW_INSTANCE, 2, new ImmutableTypeReference(
+            new ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, change == Change.CHIPS_RESULT_DROPPED ? 0 : 4));
+        var copy = new ImmutableInstruction21c(Opcode.NEW_INSTANCE, 5, new ImmutableTypeReference(
             change == Change.CHIPS_BEFORE_ANOTHER_COPY ? "Ljava/util/LinkedList;" : "Ljava/util/ArrayList;"));
         boolean hooked = !unhooked(change) && change != Change.BRIDGE_ONLY && change != Change.MISSING_CHIPS_HOOK;
         List<Instruction> code = new ArrayList<>();
@@ -390,23 +392,23 @@ class VerifyExtensionsDexTest {
         if (hooked && change != Change.CHIPS_BEFORE_THE_REWRITE && change != Change.CHIPS_AFTER_THE_COPY) code.addAll(hook);
         code.add(copy);
         if (hooked && change == Change.CHIPS_AFTER_THE_COPY) code.addAll(hook);
-        code.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 2));
-        return method(owner, "invokeSuspend", List.of("Ljava/lang/Object;"), "Ljava/lang/Object;", 0x01, 5, code);
+        code.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 5));
+        return method(owner, "z", List.of("Lp/bh30;", "Z", "Lp/ocm;"), "Ljava/lang/Object;", 0x01, 10, code);
     }
 
     /**
-     * Home's chip events, Lp/a4v;->invoke: a tap's Lp/q8w; is built from the chip's id in v1, the chip bridge
-     * takes the id and skips to the case's return-object v13 when it handled the tap, and otherwise the event
-     * goes to Home's loop, Lp/bay;->invoke.
+     * Home's chip events, Lp/jfy;->invoke: a tap's Lp/wlz; is built from the chip's id in v1, the chip bridge
+     * takes the id and skips to the case's return-object v11 when it handled the tap, and otherwise the event
+     * goes to Home's loop, Lp/m220;->invoke.
      */
     ImmutableMethod chipEvents(String owner, Change change) {
-        String type = change == Change.TAP_AFTER_ANOTHER_EVENT ? "Lp/other;" : "Lp/q8w;";
+        String type = change == Change.TAP_AFTER_ANOTHER_EVENT ? "Lp/other;" : "Lp/wlz;";
         var event = List.of(
-            new ImmutableInstruction21c(Opcode.NEW_INSTANCE, 2, new ImmutableTypeReference(type)),
-            new ImmutableInstruction35c(Opcode.INVOKE_DIRECT, 2, 2, 1, 0, 0, 0,
+            new ImmutableInstruction21c(Opcode.NEW_INSTANCE, 0, new ImmutableTypeReference(type)),
+            new ImmutableInstruction35c(Opcode.INVOKE_DIRECT, 2, 0, 1, 0, 0, 0,
                 new ImmutableMethodReference(type, "<init>", List.of("Ljava/lang/String;"), "V")));
-        var send = new ImmutableInstruction35c(Opcode.INVOKE_VIRTUAL, 2, 3, 2, 0, 0, 0,
-            new ImmutableMethodReference("Lp/bay;", "invoke", List.of("Ljava/lang/Object;"), "Ljava/lang/Object;"));
+        var send = new ImmutableInstruction35c(Opcode.INVOKE_VIRTUAL, 2, 3, 0, 0, 0, 0,
+            new ImmutableMethodReference("Lp/m220;", "invoke", List.of("Ljava/lang/Object;"), "Ljava/lang/Object;"));
         boolean hooked = !unhooked(change) && change != Change.BRIDGE_ONLY && change != Change.MISSING_TAP_HOOK;
         // A branch counts code units from the if-nez: itself 2, the event 2 and 3, a nop 1, the send 3 and the
         // goto 1. TAP_SKIPS_ELSEWHERE lands on the goto instead of the return.
@@ -421,7 +423,7 @@ class VerifyExtensionsDexTest {
         code.add(send);
         if (hooked && change == Change.TAP_AFTER_THE_SEND) code.addAll(tapHook(change, 2 + 1));
         code.add(new ImmutableInstruction10t(Opcode.GOTO, 1));
-        code.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 13));
+        code.add(new ImmutableInstruction11x(Opcode.RETURN_OBJECT, 11));
         return method(owner, "invoke", List.of("Ljava/lang/Object;", "Ljava/lang/Object;"), "Ljava/lang/Object;", 0x01, 16, code);
     }
 
@@ -436,10 +438,8 @@ class VerifyExtensionsDexTest {
     }
 
     /**
-     * Now Playing's shuffle button, Lp/xkp;: its constructor stores the button from v2 in field i, N1 hands v2 to
-     * NowPlayingShuffle, and the constructor returns. 6 registers, so this is v4. SHUFFLE_IN_ANOTHER_METHOD
-     * moves that ending, hook and all, into another method of the class with the same parameters, and
-     * SHUFFLE_IN_ANOTHER_CLASS gives the same code, still storing into Lp/xkp;'s field, to another class.
+     * Now Playing's shuffle button, Lp/aes;: its constructor stores the button from v2 in field t, N1 hands v2 to
+     * NowPlayingShuffle, and the constructor returns. 6 registers, so this is v4.
      */
     ImmutableClassDef shuffleButton(String owner, Change change) {
         boolean hooked = !unhooked(change) && change != Change.BRIDGE_ONLY && change != Change.MISSING_SHUFFLE_HOOK;
@@ -453,11 +453,11 @@ class VerifyExtensionsDexTest {
         return new ImmutableClassDef(owner, 1, "Ljava/lang/Object;", List.of(), null, Set.of(), List.of(), methods);
     }
 
-    /** The store of the button into Lp/xkp;'s field, N1 when {@code hooked}, and the return. */
+    /** The store of the button into Lp/aes;'s field, N1 when {@code hooked}, and the return. */
     List<Instruction> buttonEnd(Change change, boolean hooked) {
         var store = new ImmutableInstruction22c(Opcode.IPUT_OBJECT,
-            change == Change.SHUFFLE_AFTER_ANOTHER_REGISTERS_STORE ? 3 : 2, 4, new ImmutableFieldReference("Lp/xkp;",
-                change == Change.SHUFFLE_AFTER_ANOTHER_FIELD ? "h" : "i", "Landroidx/appcompat/widget/AppCompatImageButton;"));
+            change == Change.SHUFFLE_AFTER_ANOTHER_REGISTERS_STORE ? 3 : 2, 4, new ImmutableFieldReference("Lp/aes;",
+                change == Change.SHUFFLE_AFTER_ANOTHER_FIELD ? "i" : "t", "Ljava/lang/Object;"));
         var hook = new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 1, change == Change.SHUFFLE_PASSES_ANOTHER_REGISTER ? 3 : 2,
             0, 0, 0, 0, new ImmutableMethodReference(SHUFFLE, "onButton", List.of("Landroid/view/View;"), "V"));
         List<Instruction> code = new ArrayList<>();
@@ -470,11 +470,8 @@ class VerifyExtensionsDexTest {
     }
 
     /**
-     * The list menu, Lp/sv70;: its constructor (6 registers, so this is v0 and the item providers are v4) stores
+     * The list menu, Lp/kfc0;: its constructor (6 registers, so this is v0 and the item providers are v4) stores
      * another list in field c, M1 replaces the providers in v4, and the constructor stores them in field d.
-     * PROVIDERS_IN_ANOTHER_METHOD moves that code, hook and all, into another method of the class with the same
-     * parameters, and PROVIDERS_IN_ANOTHER_CLASS gives the same code, still storing into Lp/sv70;'s fields, to
-     * another class.
      */
     ImmutableClassDef listMenu(String owner, Change change) {
         boolean hooked = !unhooked(change) && change != Change.BRIDGE_ONLY && change != Change.MISSING_PROVIDERS_HOOK;
@@ -485,16 +482,16 @@ class VerifyExtensionsDexTest {
         return new ImmutableClassDef(owner, 1, "Ljava/lang/Object;", List.of(), null, Set.of(), List.of(), methods);
     }
 
-    /** The stores of Lp/sv70;'s fields c and d, with M1 before the store of d when {@code hooked}, and the return. */
+    /** The stores of Lp/kfc0;'s fields c and d, with M1 before the store of d when {@code hooked}, and the return. */
     List<Instruction> providersStore(Change change, boolean hooked) {
         var hook = List.of(
             new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 1, change == Change.PROVIDERS_PASS_ANOTHER_REGISTER ? 3 : 4,
                 0, 0, 0, 0, new ImmutableMethodReference(PROVIDER, "providers", List.of("Ljava/util/List;"), "Ljava/util/List;")),
             new ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, change == Change.PROVIDERS_RESULT_DROPPED ? 5 : 4));
         var store = new ImmutableInstruction22c(Opcode.IPUT_OBJECT, 4, change == Change.PROVIDERS_STORED_ELSEWHERE ? 1 : 0,
-            new ImmutableFieldReference("Lp/sv70;", change == Change.PROVIDERS_BEFORE_ANOTHER_STORE ? "c" : "d", "Ljava/util/List;"));
+            new ImmutableFieldReference("Lp/kfc0;", change == Change.PROVIDERS_BEFORE_ANOTHER_STORE ? "c" : "d", "Ljava/util/List;"));
         List<Instruction> code = new ArrayList<>();
-        code.add(new ImmutableInstruction22c(Opcode.IPUT_OBJECT, 3, 0, new ImmutableFieldReference("Lp/sv70;", "c", "Ljava/util/List;")));
+        code.add(new ImmutableInstruction22c(Opcode.IPUT_OBJECT, 3, 0, new ImmutableFieldReference("Lp/kfc0;", "c", "Ljava/util/List;")));
         if (hooked && change != Change.PROVIDERS_AFTER_THE_STORE) code.addAll(hook);
         code.add(store);
         if (hooked && change == Change.PROVIDERS_AFTER_THE_STORE) code.addAll(hook);
@@ -505,6 +502,12 @@ class VerifyExtensionsDexTest {
     ImmutableInstruction3rc bridgeHook(int register) {
         return new ImmutableInstruction3rc(Opcode.INVOKE_STATIC_RANGE, register, 1,
             new ImmutableMethodReference(VerifyExtensionsDex.BRIDGE, "onCosmos", List.of("Ljava/lang/Object;"), "V"));
+    }
+
+    ImmutableInstruction22c nativeRouterStore(int selfRegister) {
+        return new ImmutableInstruction22c(Opcode.IPUT_OBJECT, 3, selfRegister,
+            new ImmutableFieldReference(VerifyExtensionsDex.SERVICE, "nativeRouter",
+                "Lcom/spotify/cosmos/cosmosimpl/NativeRouter;"));
     }
 
     ImmutableInstruction35c schedule() {

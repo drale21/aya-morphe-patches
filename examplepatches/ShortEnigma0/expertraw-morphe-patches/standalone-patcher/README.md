@@ -123,10 +123,11 @@ The patcher is original work and contains no Morphe code. It contains **no Samsu
 the user supplies. The classes under `smali/` and `java/` are original helper code that the patcher adds to that APK;
 `java/stubs/` are compile-time stand-ins that are never shipped.
 
-## Disclaimer
+## Legal, DMCA & Trademark Disclaimer
 
-Not affiliated with, endorsed by, or sponsored by Samsung Electronics. "Samsung", "Galaxy" and "Expert RAW" are
-trademarks of Samsung Electronics Co., Ltd., used only to identify the app this tool works with. You are responsible
-for having the right to modify the APK you patch. Modifying and re-signing the app removes features that depend on
-Samsung's signature (see "What you lose").
+* **No Proprietary Code or Binaries:** This tool does **NOT** host, mirror, bundle, or distribute any proprietary APKs, copyrighted binary code, or assets belonging to Samsung Electronics Co., Ltd. It operates exclusively via local, client-side differential bytecode modification on an APK supplied by the user.
+* **Non-Circumvention:** This tool does **not** bypass or circumvent DRM, encryption, access controls, or copyright protection mechanisms (17 U.S.C. § 1201).
+* **Trademark Notice:** "Samsung", "Galaxy", "Galaxy Store", "Expert RAW", and "One UI" are registered trademarks of Samsung Electronics Co., Ltd. Reference to these marks is made strictly under **nominative fair use** for identification and technical compatibility purposes. This tool is **not affiliated with, sponsored by, or endorsed by** Samsung Electronics Co., Ltd.
+* **Disclaimer of Warranty:** Provided strictly **"AS IS", WITHOUT WARRANTY OF ANY KIND** under GPLv3. You are responsible for having the right to modify the APK you patch. Modifying and re-signing the app removes features that depend on Samsung's signature (see "What you lose").
+* **DMCA Inquiries & Takedown:** For full legal policies or to submit a copyright notification pursuant to 17 U.S.C. § 512, see [DMCA.md](DMCA.md) or open an issue on GitHub.
 

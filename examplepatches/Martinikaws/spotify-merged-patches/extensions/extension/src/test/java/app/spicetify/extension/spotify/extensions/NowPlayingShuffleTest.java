@@ -136,6 +136,51 @@ public class NowPlayingShuffleTest {
         assertEquals(1, taps.get());
     }
 
+    @Test
+    public void onATapTogglesBetweenShufflePlusAndStandardPresetOrderSkippingSpotifysShuffle() throws Exception {
+        ImageButton button = new ImageButton(context);
+        AtomicInteger spotifyTaps = new AtomicInteger();
+        NowPlayingShuffle.onButton(button);
+        // Spotify attaches its click listener in Lp/aes;->c after the constructor hook N1.
+        button.setOnClickListener(v -> spotifyTaps.incrementAndGet());
+        NowPlayingShuffle.ensureClickWrapped(button);
+
+        Extensions.setOn(context, Extensions.SHUFFLE_PLUS, true);
+        FakeRequest stream = router.next();
+        assertEquals("SUB", stream.action);
+        assertEquals(GET_STATE, stream.uri);
+        stream.callback.onResponse(200, ShufflePlusTest.state(PLAYLIST, "spotify:track:b", "uid-b"));
+
+        // First tap: runs Shuffle+ (true Fisher-Yates shuffle) and does not call Spotify's listener.
+        button.performClick();
+        assertEquals("Spotify's smart/mixed shuffle listener is skipped", 0, spotifyTaps.get());
+
+        FakeRequest firstGet = router.next();
+        assertEquals(PLAYLIST_GET, firstGet.uri);
+        firstGet.callback.onResponse(200, RandomSongTest.playlistPage(2, "spotify:track:a", "spotify:track:b"));
+        FakeRequest firstPlay = router.next();
+        assertEquals(PLAY, firstPlay.uri);
+        firstPlay.callback.onResponse(200, new byte[0]);
+        ShufflePlusTest.awaitStatus("Shuffled 2 songs");
+        assertTrue(ShufflePlus.isShuffled());
+
+        // Second tap on the same playlist: switches to standard preset order (no mixing) starting at current track.
+        button.performClick();
+        assertEquals(0, spotifyTaps.get());
+
+        FakeRequest secondGet = router.next();
+        assertEquals(PLAYLIST_GET, secondGet.uri);
+        secondGet.callback.onResponse(200, RandomSongTest.playlistPage(2, "spotify:track:a", "spotify:track:b"));
+        FakeRequest secondPlay = router.next();
+        assertEquals(PLAY, secondPlay.uri);
+        assertArrayEquals("plays in exact preset order starting at current song index 1",
+                Esperanto.playOrder(PLAYLIST, java.util.Arrays.asList("spotify:track:a", "spotify:track:b"), 1),
+                secondPlay.body);
+        secondPlay.callback.onResponse(200, new byte[0]);
+        ShufflePlusTest.awaitStatus("Preset order (2 songs)");
+        assertFalse(ShufflePlus.isShuffled());
+    }
+
     /** The node's long-click action, or null when it has none. */
     private static AccessibilityNodeInfo.AccessibilityAction longClick(AccessibilityNodeInfo info) {
         for (AccessibilityNodeInfo.AccessibilityAction action : info.getActionList()) {

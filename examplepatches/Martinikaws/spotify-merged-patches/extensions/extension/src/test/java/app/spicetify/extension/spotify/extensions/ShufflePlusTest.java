@@ -512,7 +512,7 @@ public class ShufflePlusTest {
         return state(contextUri, "spotify:track:now", "uid-now");
     }
 
-    private static byte[] state(String contextUri, String trackUri, String trackUid) {
+    static byte[] state(String contextUri, String trackUri, String trackUid) {
         Wire.Writer contextTrack = new Wire.Writer();
         contextTrack.string(1, trackUri);
         contextTrack.string(2, trackUid);

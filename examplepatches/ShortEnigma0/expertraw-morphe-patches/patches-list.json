@@ -1,77 +1,7 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "patches": [
-    {
-      "name": "Change installer source",
-      "description": "Spoofs the installer source so the app appears to be installed from an app store.",
-      "default": false,
-      "category": null,
-      "compatiblePackages": null,
-      "options": [
-        {
-          "key": "packageInstallerName",
-          "title": "Spoofed package installer name",
-          "description": null,
-          "required": false,
-          "type": "kotlin.String",
-          "default": "com.android.vending",
-          "values": {
-            "Google Play": "com.android.vending",
-            "Samsung Galaxy Store": "com.sec.android.app.samsungapps",
-            "Amazon Appstore": "com.amazon.venezia",
-            "Huawei AppGallery": "com.huawei.appmarket",
-            "Xiaomi GetApps": "com.xiaomi.mipicks"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Clone app",
-      "description": "Changes the app package name to allow installing the same app multiple times. By default \".morphe\" is appended to the package name. Each cloned install must use a unique package name. Cloning does not work with all apps and using this patch may cause app crashes or other unexpected behavior.",
-      "default": false,
-      "category": null,
-      "compatiblePackages": null,
-      "options": [
-        {
-          "key": "packageName",
-          "title": "Package name",
-          "description": "Package name to use for the cloned app.",
-          "required": true,
-          "type": "kotlin.String",
-          "default": "Default",
-          "values": {
-            "Default": "Default"
-          }
-        },
-        {
-          "key": "updatePermissions",
-          "title": "Update permissions",
-          "description": "Update custom permissions declared by the app. Fixes installation conflicts, but can break features in certain apps.",
-          "required": false,
-          "type": "kotlin.Boolean",
-          "default": true,
-          "values": null
-        },
-        {
-          "key": "updateProviders",
-          "title": "Update providers",
-          "description": "Update provider names declared by the app. Fixes installation conflicts, but can break features in certain apps.",
-          "required": false,
-          "type": "kotlin.Boolean",
-          "default": true,
-          "values": null
-        }
-      ]
-    },
-    {
-      "name": "Disable Play Store updates",
-      "description": "Disables Play Store updates by setting the version code to the maximum allowed. This patch may cause unexpected issues with some apps and does not work if the app is installed by root mounting",
-      "default": false,
-      "category": null,
-      "compatiblePackages": null,
-      "options": []
-    },
     {
       "name": "Disable post-processing",
       "description": "Adds Settings > Pictures > \"Disable post-processing\". When on, each shot is a single frame instead of a multi-frame burst (no multi-frame merge or HDR stacking for RAW and JPEG), saved right away without the \"Refining image\" notification. Lab modes are unchanged.",
@@ -102,14 +32,6 @@
       "options": []
     },
     {
-      "name": "Override certificate pinning",
-      "description": "Overrides certificate pinning, allowing to inspect traffic via a proxy.",
-      "default": false,
-      "category": null,
-      "compatiblePackages": null,
-      "options": []
-    },
-    {
       "name": "Samsung signature compatibility",
       "description": "Lets a re-signed Expert RAW run on a stock Galaxy: calls that need Samsung's platform signature are made safe, private storage under /data/sec is moved to app storage and Samsung's private media provider is emulated with MediaStore. Voice shutter and volume-key shutter stop working.",
       "default": true,
@@ -136,14 +58,6 @@
           ]
         }
       ],
-      "options": []
-    },
-    {
-      "name": "Spoof signature",
-      "description": "Spoofs the package signature of the original APK.",
-      "default": false,
-      "category": null,
-      "compatiblePackages": null,
       "options": []
     }
   ]

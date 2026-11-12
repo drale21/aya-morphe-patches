@@ -64,6 +64,9 @@ final class ExtensionSettings {
         if (Extensions.SHUFFLE_PLUS.equals(id)) {
             SpotifyStyle.actionRow(whileOn, "Shuffle+ what's playing", "Play every song of the list that's playing in a new order",
                     view -> ShufflePlus.shuffleWhatsPlaying(screen));
+            SpotifyStyle.actionRow(whileOn, "Standard preset order",
+                    "Play the list that's playing in its preset order, with no mixing or shuffle",
+                    view -> ShufflePlus.playPresetOrderWhatsPlaying(screen));
         }
         if (Extensions.HIDE_PODCASTS.equals(id)) {
             SpotifyStyle.toggleRow(rows, "Also hide audiobooks",
