@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import org.junit.After;
 import org.junit.Before;
@@ -51,6 +52,16 @@ public class CallRecordButtonTest {
         screen.addView(new ImageView(context), arrow);
         screen.addView(new FrameLayout(context), new FrameLayout.LayoutParams(-1, -2, Gravity.LEFT));
         return screen;
+    }
+
+    /** A voice chat's row of top right buttons as Telegram builds it: three 48dp icons side by side. */
+    static LinearLayout row() {
+        Context context = RuntimeEnvironment.getApplication();
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        int size = Math.round(48 * context.getResources().getDisplayMetrics().density);
+        for (int i = 0; i < 3; i++) row.addView(new ImageView(context), new LinearLayout.LayoutParams(size, size));
+        return row;
     }
 
     private static CallRecordButton.Dot dot(FrameLayout screen) {
@@ -98,7 +109,7 @@ public class CallRecordButtonTest {
         assertSame(screen.getChildAt(2), arrow);
         CallRecordButton.attach(screen);
         CallRecordButton.attach(screen);
-        assertEquals("one button however often the screen is shown", 5, screen.getChildCount());
+        assertEquals("one button and its pause however often the screen is shown", 6, screen.getChildCount());
         CallRecordButton.Dot dot = dot(screen);
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) dot.getLayoutParams();
         assertEquals(Gravity.TOP | Gravity.LEFT, params.gravity);
@@ -181,6 +192,109 @@ public class CallRecordButtonTest {
         layOut(screen);
         dot.follow();
         assertEquals(View.VISIBLE, dot.getVisibility());
+    }
+
+    @Test public void theTimerReadsLikeAClock() {
+        assertEquals("0:00", CallRecordButton.timer(0));
+        assertEquals("0:00", CallRecordButton.timer(-5));
+        assertEquals("0:42", CallRecordButton.timer(42_999));
+        assertEquals("12:05", CallRecordButton.timer(725_000));
+        assertEquals("1:02:09", CallRecordButton.timer(3_729_000));
+    }
+
+    @Test public void theButtonShowsTheLengthOnlyWhileTheCallRecords() {
+        FrameLayout screen = screen();
+        CallRecordButton.attach(screen);
+        CallRecordButton.Dot dot = dot(screen);
+        dot.refresh();
+        assertEquals("", dot.shownTime());
+        dot.performClick();
+        assertEquals("0:00", dot.shownTime());
+        dot.performClick();
+        assertEquals("", dot.shownTime());
+    }
+
+    @Test public void thePauseButtonSitsBesideTheRecordButtonOnlyWhileTheCallRecords() {
+        FrameLayout screen = screen();
+        ImageView arrow = CallRecordButton.minimize(screen);
+        CallRecordButton.attach(screen);
+        CallRecordButton.Dot dot = dot(screen);
+        CallRecordButton.Pause pause = (CallRecordButton.Pause) CallRecordButton.findPause(screen);
+        assertNotNull("no pause button", pause);
+        layOut(screen);
+        pause.follow();
+        assertEquals(View.GONE, pause.getVisibility());
+
+        dot.performClick();
+        pause.follow();
+        assertEquals(View.VISIBLE, pause.getVisibility());
+        assertEquals(arrow.getLeft() + arrow.getLayoutParams().width, Math.round(pause.getX()));
+        assertEquals(arrow.getBottom(), Math.round(pause.getY()));
+        assertEquals("Pause recording", pause.getContentDescription());
+
+        assertTrue(pause.performClick());
+        assertTrue(CallRecorder.paused());
+        assertTrue(pause.paused());
+        assertEquals("Recording paused", toast());
+        assertEquals("Resume recording", pause.getContentDescription());
+        assertTrue("paused is still this call's recording", CallRecorder.recordingThisCall());
+
+        pause.performClick();
+        assertFalse(CallRecorder.paused());
+        assertEquals("Recording resumed", toast());
+
+        // Stopping the recording takes a pause with it, and the button goes.
+        pause.performClick();
+        dot.performClick();
+        assertFalse(CallRecorder.paused());
+        pause.follow();
+        assertEquals(View.GONE, pause.getVisibility());
+        assertFalse(pause.paused());
+    }
+
+    @Test public void aVoiceChatGetsBothButtonsAtTheFrontOfItsTopRightRow() {
+        LinearLayout row = row();
+        View first = row.getChildAt(0);
+        CallRecordButton.attachRow(row);
+        CallRecordButton.attachRow(row);
+        assertEquals("both buttons once however often the screen is built", 5, row.getChildCount());
+        CallRecordButton.Dot dot = (CallRecordButton.Dot) row.getChildAt(0);
+        CallRecordButton.Pause pause = (CallRecordButton.Pause) row.getChildAt(1);
+        assertSame(first, row.getChildAt(2));
+        assertEquals(first.getLayoutParams().width, dot.getLayoutParams().width);
+        assertEquals(first.getLayoutParams().height, pause.getLayoutParams().height);
+
+        layOut(row);
+        dot.follow();
+        pause.follow();
+        assertEquals(View.VISIBLE, dot.getVisibility());
+        assertEquals(View.GONE, pause.getVisibility());
+        assertEquals("the row places the button, so nothing moves it", 0f, dot.getTranslationY(), 0f);
+
+        dot.performClick();
+        assertTrue(CallRecorder.recordingThisCall());
+        assertEquals("Recording this call", toast());
+        pause.follow();
+        assertEquals(View.VISIBLE, pause.getVisibility());
+        assertEquals(0f, pause.getTranslationX(), 0f);
+        assertEquals(0f, pause.getTranslationY(), 0f);
+        assertTrue(pause.performClick());
+        assertTrue(CallRecorder.paused());
+    }
+
+    @Test public void aVoiceChatRowStaysStockWithTheSwitchOff() {
+        Settings.RECORD_CALL_BUTTON.resetToDefault();
+        LinearLayout row = row();
+        CallRecordButton.attachRow(row);
+        assertEquals(3, row.getChildCount());
+        assertNull(CallRecordButton.find(row));
+    }
+
+    @Test public void onlyARowOfButtonsGetsTheRowButtons() {
+        CallRecordButton.attachRow(null);
+        FrameLayout screen = screen();
+        CallRecordButton.attachRow(screen);
+        assertEquals(4, screen.getChildCount());
     }
 
     @Test public void aScreenThatIsNoFrameGetsNoButton() {

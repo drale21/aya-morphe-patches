@@ -1146,7 +1146,7 @@ Couldn't save the call recording.	No se pudo guardar la grabación de la llamada
 # context: a switch on the Privacy page under Record calls (#39), off by default. Turned on, it puts a round record button on Telegram's call screen, right under the minimize arrow in the top left corner.
 Record button on calls	Botón de grabar en llamadas
 # context: that switch's summary. "Record calls" is the name of the switch above it, which records every call. A tap on the button records only the call on screen, or, with Record calls on, skips recording that one call.
-A button on the call screen records just that call, or stops recording it when Record calls is on.	Un botón en la pantalla de llamada graba solo esa llamada, o deja de grabarla cuando Grabar llamadas está activado.
+A button on the call and voice chat screens records just that call, or stops recording it when Record calls is on.	Un botón en la pantalla de llamada y de chat de voz graba solo esa llamada, o deja de grabarla cuando Grabar llamadas está activado.
 # context: a short toast shown when the record button on the call screen is tapped and the call starts recording.
 Recording this call	Grabando esta llamada
 # context: a short toast shown when the record button on the call screen is tapped again and the call stops recording. What was already recorded is still saved.
@@ -1628,6 +1628,8 @@ Don't notify contacts	No notificar a los contactos
 When you sign up a phone number that's new to Telegram, people who have it saved aren't told you joined. Accounts that already exist aren't affected.	Al registrar un número de teléfono nuevo en Telegram, quienes lo tienen guardado no reciben aviso de que te uniste. Las cuentas que ya existen no se ven afectadas.
 # context: Lowercase noun phrase naming the Don't notify contacts switch (#71) in the patch status list
 quiet sign-up	registro silencioso
+# context: Lowercase noun phrase naming the Delete account row (#71) in the patch status list
+account deletion	eliminación de cuenta
 # context: Lowercase noun phrase naming Proxy order (#71) in the patch status list
 proxy order	orden de proxies
 # context: Title of the Proxy order row on the Chat list page and of its editor dialog (#71). It sets the order of the proxies on Telegram's own proxy screen
@@ -1801,3 +1803,106 @@ Not in secret chats	No en chats secretos
 This chat doesn't allow saving	Este chat no permite guardar
 # context: Toast once the Screenshot button's picture is saved. Pictures is the phone's pictures folder. Two short lines at most.
 Screenshot saved to Pictures	Captura guardada en Imágenes
+
+# context: Title of a settings row and of its dialog: type a user, group or channel ID and that chat opens
+Open a chat by ID	Abrir un chat por ID
+# context: Summary of the Open a chat by ID row. Telegram only opens people and chats it already has stored on the phone
+Type a user, group or channel ID to open that chat. It works for anyone this app has already seen, such as someone who wrote in a group you opened.	Escribe el ID de un usuario, grupo o canal para abrir ese chat. Funciona con cualquiera que esta app ya haya visto, como alguien que escribió en un grupo que abriste.
+# context: Hint and label of the number field in the Open a chat by ID dialog
+User or chat ID	ID de usuario o chat
+# context: Note in the Open a chat by ID dialog. The ID row is the one Show user and chat IDs adds to a profile; bots write a group ID with a minus sign and a channel ID starting with -100
+The number from a profile's ID row, or a chat ID the way bots write it.	El número de la fila ID de un perfil, o un ID de chat como lo escriben los bots.
+# context: Button in the Open a chat by ID dialog that opens the chat
+Open	Abrir
+# context: Toast when what was typed in Open a chat by ID isn't a number. Two short lines at most.
+Type the ID in numbers	Escribe el ID con números
+# context: Toast when Telegram on this phone has never stored that user or chat, so it can't open it. Two short lines at most.
+This app hasn't seen that ID yet	Esta app aún no ha visto ese ID
+# context: Title of a settings row under Free proxies and of its dialog: the addresses of proxy lists the person adds
+Your proxy lists	Tus listas de proxies
+# context: Summary of the Your proxy lists row when none are added. Free proxies is the name of the switch above it
+Add the addresses of proxy lists you trust, and Free proxies reads those instead of the public ones.	Agrega las direcciones de listas de proxies en las que confíes, y Proxies gratis leerá esas en vez de las públicas.
+# context: Summary of the Your proxy lists row with the number of lists added. Free proxies is the name of the switch above it
+Lists added: %1$s. Free proxies reads these instead of the public ones.	Listas agregadas: %1$s. Proxies gratis lee estas en vez de las públicas.
+# context: Hint and label of the box in the Your proxy lists dialog, where each line is one web address
+One https address a line	Una dirección https por línea
+# context: Note in the Your proxy lists dialog. t.me/proxy and tg://proxy are link forms and stay as they are
+Each list is a page of t.me/proxy or tg://proxy links. Free proxies times them and adds the 10 fastest. Leave it empty to use the public lists again.	Cada lista es una página de enlaces t.me/proxy o tg://proxy. Proxies gratis los mide y agrega los 10 más rápidos. Déjalo vacío para volver a usar las listas públicas.
+# context: Toast when a line in Your proxy lists isn't an https web address. Two short lines at most.
+Each line needs an https address	Cada línea necesita una dirección https
+# context: Toast when more lists are typed than Your proxy lists keeps; %1$s is the most it keeps (5). Two short lines at most.
+Up to %1$s lists	Hasta %1$s listas
+# context: Toast when Your proxy lists couldn't be saved. Two short lines at most.
+Couldn't save the lists. Try again in a moment.	No se guardaron las listas. Inténtalo en un momento.
+# context: Summary of the Find free proxies now row before its first try, when the person has added lists of their own
+Downloads your proxy lists now, times them and adds the fastest to Telegram's proxy list, even with the switch above off.	Descarga ahora tus listas de proxies, los mide y agrega los más rápidos a la lista de proxies de Telegram, aunque el interruptor de arriba esté apagado.
+# context: Toast and dialog note when Open a chat by ID couldn't look the ID up or couldn't start the chat. Two short lines at most.
+Couldn't open that. Try again.	No se pudo abrir. Inténtalo de nuevo.
+# context: Record calls (#72). The chat list long press item and its toasts, the call screen's pause button and toasts, and three settings rows: which calls are recorded, the chats picked for it, and how long recordings are kept.
+Record calls here	Grabar llamadas aquí
+Calls in these chats aren't recorded anymore.	Las llamadas de estos chats ya no se graban.
+Calls in these chats are recorded.	Las llamadas de estos chats se graban.
+Recording paused	Grabación en pausa
+Recording resumed	Grabación reanudada
+Pause recording	Pausar grabación
+Resume recording	Reanudar grabación
+Calls to record	Llamadas que se graban
+Every call	Todas las llamadas
+Private calls only	Solo llamadas privadas
+Voice chats and live streams only	Solo chats de voz y transmisiones en directo
+Only calls in the chats you pick below	Solo las llamadas de los chats que elijas abajo
+Chats to record	Chats que se graban
+Keep recordings	Conservar grabaciones
+Recordings stay until you delete them.	Las grabaciones se quedan hasta que las borres.
+Recordings older than %1$d day are deleted when the next one is saved.	Las grabaciones de más de %1$d día se borran cuando se guarda la siguiente.
+Recordings older than %1$d days are deleted when the next one is saved.	Las grabaciones de más de %1$d días se borran cuando se guarda la siguiente.
+Until you delete them	Hasta que las borres
+Recordings folder	Carpeta de grabaciones
+Recordings go to %1$s. The usual folder is %2$s.	Las grabaciones van a %1$s. La carpeta habitual es %2$s.
+Choose another folder	Elegir otra carpeta
+Use the usual folder	Usar la carpeta habitual
+Couldn't use that folder. Pick another one.	No se puede usar esa carpeta. Elige otra.
+This phone has no folder picker.	Este teléfono no tiene selector de carpetas.
+Internal storage	Almacenamiento interno
+Save recordings as Opus	Guardar grabaciones en Opus
+Files about half the size, ending in .ogg. Some older players can't open them.	Archivos de más o menos la mitad de tamaño, terminados en .ogg. Algunos reproductores antiguos no los abren.
+Notify when a call is saved	Avisar cuando se guarde una llamada
+A tap on the notification plays the recording. Its buttons share it or send it to your Saved Messages.	Al tocar la notificación se reproduce la grabación. Sus botones la comparten o la envían a tus Mensajes guardados.
+Call recordings	Grabaciones de llamadas
+Call recording saved	Grabación de llamada guardada
+Share	Compartir
+%1$d day	%1$d día
+%1$d days	%1$d días
+# context: Delete account (#71). A row on the Privacy page, the dialog it opens (the name is the account's, and the button is the row's title again) and the toasts after Telegram answers. The day count is how long Telegram waits before deleting an account that has a cloud password.
+Delete account	Eliminar cuenta
+Deletes the account you're using now, with its messages and contacts. If it has a cloud password, Telegram waits a week first.	Elimina la cuenta que estás usando ahora, con sus mensajes y contactos. Si tiene contraseña en la nube, Telegram espera una semana antes.
+Delete this account?	¿Eliminar esta cuenta?
+Telegram deletes %1$s with all its messages and contacts. This can't be undone.	Telegram elimina %1$s con todos sus mensajes y contactos. No se puede deshacer.
+Account deleted.	Cuenta eliminada.
+Telegram deletes the account in %1$d day.	Telegram eliminará la cuenta en %1$d día.
+Telegram deletes the account in %1$d days.	Telegram eliminará la cuenta en %1$d días.
+Telegram didn't delete the account.	Telegram no eliminó la cuenta.
+# context: Show all spoilers and quotes (#71). Two items in a chat's menu at the top (the three dots), the toasts they show, and two switches on the Reveal spoilers page. The summary names the two menu items, so use the same words for them there. A collapsed quote is a long quote Telegram shows folded, with a button to expand it.
+Show all spoilers	Mostrar todos los spoilers
+Expand all quotes	Expandir todas las citas
+Couldn't update the messages here.	No se pudieron actualizar los mensajes aquí.
+No hidden spoilers in the loaded messages.	No hay spoilers ocultos en los mensajes cargados.
+No collapsed quotes in the loaded messages.	No hay citas contraídas en los mensajes cargados.
+Show all spoilers and quotes	Mostrar todos los spoilers y citas
+A chat's menu at the top gets Show all spoilers and Expand all quotes, for the messages loaded so far.	El menú superior de un chat tiene Mostrar todos los spoilers y Expandir todas las citas, para los mensajes cargados hasta ahora.
+Open quotes on search hits	Abrir citas en resultados de búsqueda
+When a chat search lands on a match inside a collapsed quote, the quote opens so the highlighted match stays in view.	Cuando una búsqueda en el chat cae en una coincidencia dentro de una cita contraída, la cita se abre para que la coincidencia resaltada siga a la vista.
+# context: Lowercase noun phrase naming the Show all spoilers and quotes switch (#71) in the patch status list
+spoiler and quote items in the chat menu	opciones de spoilers y citas en el menú del chat
+# context: Lowercase noun phrase naming the Open quotes on search hits switch (#71) in the patch status list
+quotes opened on search hits	citas abiertas en resultados de búsqueda
+# context: Label of the Select all button (#73) in the bar that shows while messages are selected, and of its switch.
+Select all	Seleccionar todo
+# context: Toast from Select all when every loaded message is already selected.
+Everything here is already selected	Ya está todo seleccionado
+# context: Summary of the Select all switch (#73). The bar is the one that appears at the top of a chat, or of a chat's shared media, while messages are selected.
+Adds a Select all button to the bar that shows while you pick messages, in chats and in a chat's shared media. It selects everything loaded, newest first, up to Telegram's limit of 100.	Añade un botón Seleccionar todo a la barra que aparece al elegir mensajes, en los chats y en los archivos compartidos de un chat. Selecciona todo lo cargado, empezando por lo más reciente, hasta el límite de 100 de Telegram.
+# context: Lowercase noun phrase filling %1$s or %2$s in "This patched app changes %1$s but not %2$s." It names the Select all button in chats.
+selecting every loaded message in a chat	seleccionar todos los mensajes cargados de un chat
+# context: Lowercase noun phrase filling %1$s or %2$s in "This patched app changes %1$s but not %2$s." It names the Select all button in a chat's shared media.
+selecting everything in shared media	seleccionar todo en los archivos compartidos

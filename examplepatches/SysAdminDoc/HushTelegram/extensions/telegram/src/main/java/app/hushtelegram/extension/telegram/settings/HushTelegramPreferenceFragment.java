@@ -66,6 +66,8 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -89,6 +91,7 @@ import app.hushtelegram.extension.telegram.misc.AutoForwarding;
 import app.hushtelegram.extension.telegram.misc.CallRecorder;
 import app.hushtelegram.extension.telegram.misc.ChatTypeFolders;
 import app.hushtelegram.extension.telegram.misc.DataSaverDownloads;
+import app.hushtelegram.extension.telegram.misc.DeleteAccount;
 import app.hushtelegram.extension.telegram.misc.FirebasePush;
 import app.hushtelegram.extension.telegram.misc.FolderIcons;
 import app.hushtelegram.extension.telegram.misc.FreeProxies;
@@ -103,6 +106,7 @@ import app.hushtelegram.extension.telegram.misc.KeepEdits;
 import app.hushtelegram.extension.telegram.misc.LaunchFolder;
 import app.hushtelegram.extension.telegram.misc.OutsideTranslate;
 import app.hushtelegram.extension.telegram.misc.ProxyOrder;
+import app.hushtelegram.extension.telegram.misc.RecordChats;
 import app.hushtelegram.extension.telegram.misc.SaveDownloads;
 import app.hushtelegram.extension.telegram.misc.SpecialContacts;
 import app.hushtelegram.extension.telegram.misc.StickerSize;
@@ -155,7 +159,19 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
     static final String FOLDER_ICON_ROW = "action_folder_icons";
     static final String HIDDEN_CHATS_ROW = "action_hidden_chats";
     static final String GHOST_CHATS_ROW = "action_ghost_chats";
+    /** The Calls to record row's key. The choice itself is saved under {@link Settings#RECORD_CALLS_WHICH}. */
+    static final String RECORD_WHICH_ROW = "action_record_calls_which";
+    /** The Chats to record row's key. The chats are kept by {@link RecordChats}. */
+    static final String RECORD_CHATS_ROW = "action_record_chats";
+    /** The Keep recordings row's key. The days are saved under {@link Settings#RECORD_CALLS_KEEP_DAYS}. */
+    static final String RECORD_KEEP_ROW = "action_record_calls_keep";
+    /** The Recordings folder row's key. The folder is saved under {@link Settings#RECORD_CALLS_FOLDER}. */
+    static final String RECORD_FOLDER_ROW = "action_record_calls_folder";
+    /** The folder picker's request, next to the settings file's 7311 and 7312. */
+    static final int RECORD_FOLDER_REQUEST = 7313;
     static final String HIDDEN_ACCOUNTS_ROW = "action_hidden_accounts";
+    /** The Delete account row's key. Nothing is saved: a tap asks, then sends the deletion. */
+    static final String DELETE_ACCOUNT_ROW = "action_delete_account";
     /** The Forwarding rules row's key. The rules themselves are saved under {@link Settings#AUTO_FORWARDING_RULES}. */
     static final String FORWARDING_RULES_ROW = "action_forwarding_rules";
     /** The Tracked people row's key. The people themselves are kept by {@link SpecialContacts}, one list for each account. */
@@ -307,6 +323,12 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RECORD_FOLDER_REQUEST) {
+            // Cancelled: nothing to do and nothing to say.
+            Uri tree = resultCode == Activity.RESULT_OK && data != null ? data.getData() : null;
+            if (tree != null) recordFolderChosen(tree);
+            return;
+        }
         SettingsBackupPreference.onResult(this, requestCode, resultCode, data);
     }
 
@@ -332,6 +354,10 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
         if (proxyOrder != null) proxyOrder.setSummary(ProxyOrder.summary());
         Preference gallery = findPreference(GALLERY_FOLDER_ROW);
         if (gallery != null) gallery.setSummary(galleryFolderSummary());
+        Preference recordWhich = findPreference(RECORD_WHICH_ROW);
+        if (recordWhich != null) recordWhich.setSummary(recordWhichLabel(RecordChats.scope()));
+        Preference recordKeep = findPreference(RECORD_KEEP_ROW);
+        if (recordKeep != null) recordKeep.setSummary(recordKeepLabel(Settings.RECORD_CALLS_KEEP_DAYS.get()));
         Preference kinds = findPreference(SAVE_KINDS_ROW);
         if (kinds != null) kinds.setSummary(saveKindsSummary());
         Preference storageName = findPreference(StorageFolderEditor.KEY);
@@ -706,6 +732,7 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
                             + "you use a proxy of your own. Whoever runs a proxy can see your IP address. Turning this "
                             + "off leaves them in the list."))));
             proxies.addPreference(findProxiesRow(context));
+            proxies.addPreference(proxyListsRow(context));
             if (PatchFamily.Capability.PROXY_ORDER.installed()) proxies.addPreference(proxyOrderRow(context));
             proxies.addPreference(toggle(context, Settings.SIGN_IN_PROXY, L10n.t("Proxy button when signing in"),
                     PatchFamily.FREE_PROXIES.coverageSummary(L10n.t("The phone number screen always has the proxy "
@@ -781,6 +808,16 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
             on(pages, PatchFamily.REVEAL_SPOILERS).addPreference(toggle(context, Settings.REVEAL_SPOILERS, L10n.t("Reveal spoilers"),
                     PatchFamily.REVEAL_SPOILERS.coverageSummary(L10n.t("Spoiler text, photos and videos show right away without a tap. View-once media, "
                             + "sensitive content and login codes stay covered."))));
+            if (PatchFamily.Capability.CHAT_REVEAL_MENU.installed()) {
+                on(pages, PatchFamily.REVEAL_SPOILERS).addPreference(toggle(context, Settings.REVEAL_MENU,
+                        L10n.t("Show all spoilers and quotes"), L10n.t("A chat's menu at the top gets Show all spoilers and Expand"
+                                + " all quotes, for the messages loaded so far.")));
+            }
+            if (PatchFamily.Capability.SEARCH_HIT_QUOTES.installed()) {
+                on(pages, PatchFamily.REVEAL_SPOILERS).addPreference(toggle(context, Settings.SEARCH_OPENS_QUOTES,
+                        L10n.t("Open quotes on search hits"), L10n.t("When a chat search lands on a match inside a collapsed"
+                                + " quote, the quote opens so the highlighted match stays in view.")));
+            }
         }
         if (build.contains(PatchFamily.MY_MESSAGES)) {
             on(pages, PatchFamily.MY_MESSAGES).addPreference(toggle(context, Settings.MY_MESSAGES, L10n.t("My messages"),
@@ -894,6 +931,11 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
                         L10n.t("Screenshot selected messages"),
                         L10n.t("Adds a Screenshot button to the bar that shows while you pick messages. It saves a picture of them as the chat"
                                 + " shows them, background, dates and times included, to Pictures/Telegram.")));
+            }
+            if (PatchFamily.Capability.SELECT_ALL.installed() || PatchFamily.Capability.SHARED_MEDIA_SELECT_ALL.installed()) {
+                on(pages, PatchFamily.MESSAGE_MENU_REPEAT).addPreference(toggle(context, Settings.SELECT_ALL, L10n.t("Select all"),
+                        L10n.t("Adds a Select all button to the bar that shows while you pick messages, in chats and in a chat's shared media."
+                                + " It selects everything loaded, newest first, up to Telegram's limit of 100.")));
             }
         }
         if (build.contains(PatchFamily.KEEP_DELETED_MESSAGES)) {
@@ -1290,6 +1332,7 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
             on(pages, PatchFamily.SHOW_LOCAL_IDS).addPreference(toggle(context, Settings.PROFILE_DATA_CENTER, L10n.t("Show where a profile photo is stored"),
                     L10n.t("A profile's menu also shows which of Telegram's five data centers (its server "
                             + "locations) stores the profile photo. No photo, no number.")));
+            on(pages, PatchFamily.SHOW_LOCAL_IDS).addPreference(openByIdRow(context));
             if (PatchFamily.Capability.SPECIAL_CONTACTS.installed()) {
                 on(pages, PatchFamily.SHOW_LOCAL_IDS).addPreference(toggle(context, Settings.SPECIAL_CONTACTS, L10n.t("Special contacts"),
                         L10n.t("A person's profile menu gets Track this user. For anyone you track, a history builds up from what "
@@ -1467,6 +1510,7 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
                             L10n.t("When you sign up a phone number that's new to Telegram, people who have it saved aren't "
                                     + "told you joined. Accounts that already exist aren't affected.")));
                 }
+                if (PatchFamily.Capability.DELETE_ACCOUNT.installed()) privacy.addPreference(deleteAccountRow(context));
             }
             if (build.contains(PatchFamily.DISABLE_CALL_DEBUG)) {
                 privacy.addPreference(toggle(context, Settings.DISABLE_CALL_DEBUG, L10n.t("Stop call diagnostics"),
@@ -1474,13 +1518,25 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
                                 + "when Telegram's server asks for them."))));
                 // Off as shipped: saving a call is the user's choice, and the other person isn't asked.
                 if (PatchFamily.Capability.CALL_RECORDING.installed()) {
-                    privacy.addPreference(toggle(context, Settings.RECORD_CALLS, L10n.t("Record calls"),
-                            L10n.f("Saves both sides of each call to %1$s on this phone. The other person isn't told.",
-                                    L10n.isolate(CallRecorder.folder()))));
+                    privacy.addPreference(toggle(context, Settings.RECORD_CALLS, L10n.t("Record calls"), recordCallsSummary()));
+                    privacy.addPreference(recordWhichRow(context));
+                    // The chats are picked from the hidden chats' list and long press item, as Ghost mode exceptions are.
+                    if (PatchFamily.Capability.HIDDEN_CHATS.installed()) privacy.addPreference(recordChatsRow(context));
+                    privacy.addPreference(recordKeepRow(context));
                 }
                 if (PatchFamily.Capability.CALL_RECORD_BUTTON.installed()) {
                     privacy.addPreference(toggle(context, Settings.RECORD_CALL_BUTTON, L10n.t("Record button on calls"),
-                            L10n.t("A button on the call screen records just that call, or stops recording it when Record calls is on.")));
+                            L10n.t("A button on the call and voice chat screens records just that call, or stops recording it when Record calls is on.")));
+                }
+                if (PatchFamily.Capability.CALL_RECORDING.installed() || PatchFamily.Capability.CALL_RECORD_BUTTON.installed()) {
+                    privacy.addPreference(recordFolderRow(context));
+                    // Android 9 can't write an .ogg, so it has nothing to choose.
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        privacy.addPreference(toggle(context, Settings.RECORD_CALLS_OPUS, L10n.t("Save recordings as Opus"),
+                                L10n.t("Files about half the size, ending in .ogg. Some older players can't open them.")));
+                    }
+                    privacy.addPreference(toggle(context, Settings.RECORD_CALLS_NOTIFY, L10n.t("Notify when a call is saved"),
+                            L10n.t("A tap on the notification plays the recording. Its buttons share it or send it to your Saved Messages.")));
                 }
             }
             if (build.contains(PatchFamily.DISABLE_DRAFT_PREVIEWS)) {
@@ -2066,6 +2122,41 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
             return true;
         });
         findProxiesRow = row;
+        return row;
+    }
+
+    private Preference proxyListsRow(Context context) {
+        Row row = new Row(context);
+        row.setKey(ProxyListsEditor.KEY);
+        row.setTitle(L10n.t("Your proxy lists"));
+        row.setPersistent(false);
+        row.setSummary(ProxyListsEditor.summary());
+        row.setOnPreferenceClickListener(p -> {
+            Activity activity = getActivity();
+            if (SettingsLock.refuses()) return true;
+            if (activity != null && !activity.isFinishing() && !activity.isDestroyed()) {
+                own(ProxyListsEditor.open(activity, p));
+            }
+            return true;
+        });
+        return row;
+    }
+
+    private Preference openByIdRow(Context context) {
+        Row row = new Row(context);
+        row.setKey(OpenByIdEditor.KEY);
+        row.setTitle(L10n.t("Open a chat by ID"));
+        row.setPersistent(false);
+        row.setSummary(L10n.t("Type a user, group or channel ID to open that chat. It works for anyone this app has "
+                + "already seen, such as someone who wrote in a group you opened."));
+        row.setOnPreferenceClickListener(p -> {
+            Activity activity = getActivity();
+            if (SettingsLock.refuses()) return true;
+            if (activity != null && !activity.isFinishing() && !activity.isDestroyed()) {
+                own(OpenByIdEditor.open(activity));
+            }
+            return true;
+        });
         return row;
     }
 
@@ -2794,6 +2885,15 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
      * this account doesn't list, and the list closes once they're saved.
      */
     void showGhostChats(Context context, Preference row) {
+        showPickedChats(context, row, L10n.t("Exception chats"), GhostChats::chats, GhostChats::save);
+    }
+
+    /**
+     * The account's chats with [current]'s ticked, under [title]. Save hands the ticks to [write],
+     * keeping the picks this account doesn't list, and the list closes once they're saved.
+     */
+    private void showPickedChats(Context context, Preference row, String title, Supplier<Set<Long>> current,
+            Predicate<Set<Long>> write) {
         if (SettingsLock.refuses()) return;
         HiddenChats.Shown shown = HiddenChats.shown();
         if (shown == null) {
@@ -2809,7 +2909,7 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
             Utils.showToastLong(L10n.t("You don't have any chats yet."));
             return;
         }
-        Set<Long> before = GhostChats.chats();
+        Set<Long> before = current.get();
         CharSequence[] labels = new CharSequence[chats.size()];
         boolean[] ticked = new boolean[chats.size()];
         for (int i = 0; i < chats.size(); i++) {
@@ -2817,7 +2917,7 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
             ticked[i] = before.contains(chats.get(i).id);
         }
         AlertDialog dialog = show(new AlertDialog.Builder(context)
-                .setTitle(L10n.t("Exception chats"))
+                .setTitle(title)
                 .setMultiChoiceItems(labels, ticked, (d, which, checked) -> ticked[which] = checked)
                 .setPositiveButton(L10n.t("Save"), null)
                 .setNegativeButton(L10n.t("Cancel"), null));
@@ -2829,9 +2929,9 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
                 if (ticked[i]) picked.add(chats.get(i).id);
                 else picked.remove(chats.get(i).id);
             }
-            save(dialog, () -> GhostChats.save(picked), landed -> {
+            save(dialog, () -> write.test(picked), landed -> {
                 if (landed) {
-                    row.setSummary(ghostChatsSummary(shown, GhostChats.chats(), passcodeOn()));
+                    row.setSummary(ghostChatsSummary(shown, current.get(), passcodeOn()));
                     dialog.dismiss();
                 } else {
                     Utils.showToastLong(L10n.t("Couldn't save the chats. Try again in a moment."));
@@ -2862,6 +2962,296 @@ public final class HushTelegramPreferenceFragment extends AbstractPreferenceFrag
             }
         }
         return names.isEmpty() ? L10n.t("No chats picked yet.") : TextUtils.join(", ", names);
+    }
+
+    /** Which calls Record calls saves: the row names the choice, and a tap lists them. */
+    private Preference recordWhichRow(Context context) {
+        Row row = new Row(context);
+        row.setKey(RECORD_WHICH_ROW);
+        row.setTitle(L10n.t("Calls to record"));
+        row.setPersistent(false);
+        row.setSummary(recordWhichLabel(RecordChats.scope()));
+        row.setOnPreferenceClickListener(p -> {
+            showRecordWhich(context, p);
+            return true;
+        });
+        return row;
+    }
+
+    /** The choices with the saved one checked, saved and closed the way the gallery folders are. */
+    void showRecordWhich(Context context, Preference row) {
+        if (SettingsLock.refuses()) return;
+        List<String> choices = recordScopes();
+        CharSequence[] labels = new CharSequence[choices.size()];
+        for (int i = 0; i < labels.length; i++) labels[i] = recordWhichLabel(choices.get(i));
+        show(new AlertDialog.Builder(context)
+                .setTitle(L10n.t("Calls to record"))
+                .setSingleChoiceItems(labels, Math.max(0, choices.indexOf(RecordChats.scope())), (dialog, which) -> {
+                    boolean started = save((AlertDialog) dialog,
+                            () -> Settings.RECORD_CALLS_WHICH.saveCommitted(choices.get(which)), landed -> {
+                                if (landed) {
+                                    row.setSummary(recordWhichLabel(RecordChats.scope()));
+                                    dialog.dismiss();
+                                } else {
+                                    checkSaved((AlertDialog) dialog, Math.max(0, choices.indexOf(RecordChats.scope())));
+                                    Utils.showToastLong(L10n.t("Couldn't save the choice. Try again in a moment."));
+                                }
+                            });
+                    if (!started) checkSaved((AlertDialog) dialog, Math.max(0, choices.indexOf(RecordChats.scope())));
+                })
+                .setNegativeButton(L10n.t("Cancel"), null));
+    }
+
+    /** The scopes this build offers: picking chats needs the hidden chats' list and long press item. */
+    static List<String> recordScopes() {
+        return PatchFamily.Capability.HIDDEN_CHATS.installed() ? RecordChats.SCOPES : RecordChats.SCOPES.subList(0, 3);
+    }
+
+    static String recordWhichLabel(String scope) {
+        if (RecordChats.PRIVATE.equals(scope)) return L10n.t("Private calls only");
+        if (RecordChats.GROUPS.equals(scope)) return L10n.t("Voice chats and live streams only");
+        if (RecordChats.CHOSEN.equals(scope)) return L10n.t("Only calls in the chats you pick below");
+        return L10n.t("Every call");
+    }
+
+    private static void checkSaved(AlertDialog dialog, int position) {
+        dialog.getListView().setItemChecked(position, true);
+    }
+
+    /** The chats Record calls saves when it's kept to picked ones: the row names them, and a tap lists every chat to tick. */
+    private Preference recordChatsRow(Context context) {
+        Row row = new Row(context);
+        row.setKey(RECORD_CHATS_ROW);
+        row.setTitle(L10n.t("Chats to record"));
+        row.setPersistent(false);
+        row.setSummary(ghostChatsSummary(HiddenChats.shown(), RecordChats.chats(), passcodeOn()));
+        row.setOnPreferenceClickListener(p -> {
+            showRecordChats(context, p);
+            return true;
+        });
+        return row;
+    }
+
+    void showRecordChats(Context context, Preference row) {
+        showPickedChats(context, row, L10n.t("Chats to record"), RecordChats::chats, RecordChats::save);
+    }
+
+    /** How long recordings are kept, in days, with 0 for always. */
+    static final List<Integer> RECORD_KEEP_DAYS = Arrays.asList(0, 7, 30, 90);
+
+    /** How long call recordings are kept: the row names it, and a tap lists the choices. */
+    private Preference recordKeepRow(Context context) {
+        Row row = new Row(context);
+        row.setKey(RECORD_KEEP_ROW);
+        row.setTitle(L10n.t("Keep recordings"));
+        row.setPersistent(false);
+        row.setSummary(recordKeepLabel(Settings.RECORD_CALLS_KEEP_DAYS.get()));
+        row.setOnPreferenceClickListener(p -> {
+            showRecordKeep(context, p);
+            return true;
+        });
+        return row;
+    }
+
+    void showRecordKeep(Context context, Preference row) {
+        if (SettingsLock.refuses()) return;
+        CharSequence[] labels = new CharSequence[RECORD_KEEP_DAYS.size()];
+        for (int i = 0; i < labels.length; i++) labels[i] = recordKeepLabel(RECORD_KEEP_DAYS.get(i));
+        show(new AlertDialog.Builder(context)
+                .setTitle(L10n.t("Keep recordings"))
+                .setSingleChoiceItems(labels, savedKeepChoice(), (dialog, which) -> {
+                    boolean started = save((AlertDialog) dialog,
+                            () -> Settings.RECORD_CALLS_KEEP_DAYS.saveCommitted(RECORD_KEEP_DAYS.get(which)), landed -> {
+                                if (landed) {
+                                    row.setSummary(recordKeepLabel(Settings.RECORD_CALLS_KEEP_DAYS.get()));
+                                    dialog.dismiss();
+                                } else {
+                                    checkSaved((AlertDialog) dialog, savedKeepChoice());
+                                    Utils.showToastLong(L10n.t("Couldn't save the choice. Try again in a moment."));
+                                }
+                            });
+                    if (!started) checkSaved((AlertDialog) dialog, savedKeepChoice());
+                })
+                .setNegativeButton(L10n.t("Cancel"), null));
+    }
+
+    /** Where the saved days sit in the list. A number that isn't one of them reads as keeping them all. */
+    static int savedKeepChoice() {
+        return Math.max(0, RECORD_KEEP_DAYS.indexOf(Settings.RECORD_CALLS_KEEP_DAYS.get()));
+    }
+
+    static String recordKeepLabel(int days) {
+        if (days <= 0 || !RECORD_KEEP_DAYS.contains(days)) return L10n.t("Recordings stay until you delete them.");
+        return L10n.quantity(days, "Recordings older than %1$d day are deleted when the next one is saved.",
+                "Recordings older than %1$d days are deleted when the next one is saved.", days);
+    }
+
+    static String recordCallsSummary() {
+        return L10n.f("Saves both sides of each call to %1$s on this phone. The other person isn't told.",
+                L10n.isolate(CallRecorder.folder()));
+    }
+
+    /** Delete account (#71): a tap asks about the account in use, then deletes it. */
+    private Preference deleteAccountRow(Context context) {
+        Row row = new Row(context);
+        row.setKey(DELETE_ACCOUNT_ROW);
+        row.setTitle(L10n.t("Delete account"));
+        row.setPersistent(false);
+        row.setSummary(L10n.t("Deletes the account you're using now, with its messages and contacts. If it has a cloud "
+                + "password, Telegram waits a week first."));
+        row.setOnPreferenceClickListener(p -> {
+            showDeleteAccount(context);
+            return true;
+        });
+        return row;
+    }
+
+    /**
+     * Asks before deleting the account in use, by name, since nothing brings it back. Delete waits
+     * dimmed for Telegram's answer, and a refusal leaves the dialog up to try again or cancel.
+     */
+    void showDeleteAccount(Context context) {
+        if (SettingsLock.refuses()) return;
+        Accounts.Entry account = DeleteAccount.account();
+        if (account == null) {
+            Utils.showToastLong(L10n.t("Sign in to Telegram first."));
+            return;
+        }
+        String asked = L10n.f("Telegram deletes %1$s with all its messages and contacts. This can't be undone.",
+                L10n.isolate(account.name));
+        AlertDialog dialog = show(new AlertDialog.Builder(context)
+                .setTitle(L10n.t("Delete this account?"))
+                .setMessage(asked)
+                .setPositiveButton(L10n.t("Delete account"), null)
+                .setNegativeButton(L10n.t("Cancel"), null));
+        if (dialog == null) return;
+        Button delete = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        DeleteAccount.Answer answer = new DeleteAccount.Answer() {
+            @Override public void done(String said) {
+                if (dialog.isShowing()) dialog.dismiss();
+                Utils.showToastLong(said);
+            }
+
+            @Override public void refused(String refused) {
+                delete.setEnabled(true);
+                dialog.setMessage(asked);
+                Utils.showToastLong(refused);
+            }
+        };
+        // Set after show, so a refusal keeps the dialog.
+        delete.setOnClickListener(v -> {
+            String refused = DeleteAccount.send(account.index, answer);
+            if (refused != null) {
+                Utils.showToastLong(refused);
+                return;
+            }
+            delete.setEnabled(false);
+            dialog.setMessage(L10n.t("Waiting for Telegram."));
+        });
+    }
+
+    /** Where call recordings are saved: the row names the folder, and a tap picks another. */
+    private Preference recordFolderRow(Context context) {
+        Row row = new Row(context);
+        row.setKey(RECORD_FOLDER_ROW);
+        row.setTitle(L10n.t("Recordings folder"));
+        row.setPersistent(false);
+        row.setSummary(L10n.isolate(CallRecorder.folder()));
+        row.setOnPreferenceClickListener(p -> {
+            showRecordFolder(context);
+            return true;
+        });
+        return row;
+    }
+
+    /** With a folder picked, another or the usual one. With none, straight to the picker. */
+    void showRecordFolder(Context context) {
+        if (SettingsLock.refuses()) return;
+        if (CallRecorder.chosenFolder() == null) {
+            pickRecordFolder();
+            return;
+        }
+        show(new AlertDialog.Builder(context)
+                .setTitle(L10n.t("Recordings folder"))
+                .setMessage(L10n.f("Recordings go to %1$s. The usual folder is %2$s.",
+                        L10n.isolate(CallRecorder.folder()), L10n.isolate(CallRecorder.usualFolder())))
+                .setPositiveButton(L10n.t("Choose another folder"), (dialog, which) -> pickRecordFolder())
+                .setNeutralButton(L10n.t("Use the usual folder"), (dialog, which) -> recordFolderChosen(null))
+                .setNegativeButton(L10n.t("Cancel"), null));
+    }
+
+    /** Android's folder picker, asked for a folder Telegram can keep writing to after a restart. */
+    private void pickRecordFolder() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        try {
+            startActivityForResult(intent, RECORD_FOLDER_REQUEST);
+        } catch (ActivityNotFoundException missing) {
+            Logger.printInfo(() -> "No folder picker for call recordings");
+            Utils.showToastLong(L10n.t("This phone has no folder picker."));
+        }
+    }
+
+    /**
+     * Saves [tree], the picker's answer, as the recordings folder with a permission that lasts, or
+     * with null goes back to the usual folder. The permission for the folder it replaces is let go
+     * once the new choice is saved, and the one just taken is let go if it isn't.
+     */
+    void recordFolderChosen(@Nullable Uri tree) {
+        Activity activity = getActivity();
+        Context context = activity != null ? activity.getApplicationContext() : Utils.getContext();
+        if (context == null) return;
+        if (tree != null) {
+            try {
+                context.getContentResolver().takePersistableUriPermission(tree, FOLDER_ACCESS);
+            } catch (SecurityException refused) {
+                Logger.printInfo(() -> "The picked folder came without a lasting permission");
+                Utils.showToastLong(L10n.t("Couldn't use that folder. Pick another one."));
+                return;
+            }
+        }
+        Uri before = CallRecorder.chosenFolder();
+        String value = tree == null ? "" : tree.toString();
+        boolean queued = Utils.runInOrderOnBackgroundThread(() -> {
+            boolean saved = false;
+            try {
+                saved = Settings.RECORD_CALLS_FOLDER.saveCommitted(value);
+            } finally {
+                boolean result = saved;
+                Utils.runOnMainThread(() -> recordFolderSaved(context, result, before, tree));
+            }
+        });
+        if (!queued) recordFolderSaved(context, false, before, tree);
+    }
+
+    private static final int FOLDER_ACCESS = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+
+    private void recordFolderSaved(Context context, boolean saved, @Nullable Uri before, @Nullable Uri tree) {
+        Uri kept = saved ? tree : before;
+        Uri dropped = saved ? before : tree;
+        if (dropped != null && !dropped.equals(kept)) {
+            try {
+                context.getContentResolver().releasePersistableUriPermission(dropped, FOLDER_ACCESS);
+            } catch (SecurityException notHeld) {
+                // Already gone with the folder.
+            }
+        }
+        if (!saved) {
+            Utils.showToastLong(L10n.t("Couldn't save the folder. Try again in a moment."));
+            return;
+        }
+        if (getPreferenceScreen() == null) return;
+        Preference row = findPreference(RECORD_FOLDER_ROW);
+        if (row != null) row.setSummary(L10n.isolate(CallRecorder.folder()));
+        Preference record = findPreference(Settings.RECORD_CALLS.key);
+        if (record != null) record.setSummary(recordCallsSummary());
+    }
+
+    /** The same choice in a few words, for a line in the import preview. */
+    static String recordKeepShort(int days) {
+        if (days <= 0 || !RECORD_KEEP_DAYS.contains(days)) return L10n.t("Until you delete them");
+        return L10n.quantity(days, "%1$d day", "%1$d days", days);
     }
 
     /** The forwarding rules for the account shown now: the row names them, and a tap lists them to add to or take from. */

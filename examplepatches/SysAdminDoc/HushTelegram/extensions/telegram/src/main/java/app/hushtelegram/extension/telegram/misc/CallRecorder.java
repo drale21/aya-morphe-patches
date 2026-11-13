@@ -8,6 +8,9 @@ import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
+import android.media.MediaCodecList;
+import android.net.Uri;
+import android.os.Build;
 import android.os.SystemClock;
 
 import androidx.annotation.Nullable;
@@ -18,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 
 import app.hushtelegram.extension.shared.L10n;
@@ -38,6 +42,10 @@ import app.hushtelegram.extension.telegram.settings.Settings;
  * hold up the call. A call's file is finished and saved once no audio has come for
  * {@link #IDLE_MS}, which is also what happens when the switch is turned off or HushTelegram is
  * paused mid-call: the part already recorded is kept.
+ *
+ * <p>Record calls can be kept to private calls, to voice chats and streams, or to chosen chats
+ * ({@link RecordChats}), and the file is named after the person or group ({@link CallPeer}). The
+ * record button's pause keeps the file open but leaves out what's said until it's resumed (#72).
  */
 public final class CallRecorder {
     private CallRecorder() {}
@@ -60,6 +68,7 @@ public final class CallRecorder {
     static final String SAVED = "call recordings saved";
     static final String FAILED = "call recordings not saved";
     static final String TOO_SHORT = "call recordings under a second";
+    static final String CLEANED = "old call recordings deleted";
 
     /** About two and a half seconds of both sides at WebRTC's ten-millisecond blocks. */
     static final int QUEUE_SIZE = 512;
@@ -72,6 +81,7 @@ public final class CallRecorder {
     /** A record button tap that no call audio follows, a call never answered, lapses after this long. */
     static final long UNANSWERED_MS = 120_000;
     private static final long NEVER = Long.MIN_VALUE;
+    private static final long DAY_MS = 24L * 60 * 60 * 1000;
 
     /** The encoder a call writes to: {@link CallAac} on a phone. */
     interface Output extends CallMixer.Sink {
@@ -83,12 +93,17 @@ public final class CallRecorder {
     }
 
     interface Outputs {
-        Output open(File file) throws IOException;
+        Output open(File file, CallRecordings.Format format) throws IOException;
     }
 
     interface Saver {
-        /** Puts the finished file in shared storage and answers the folder it went to. */
-        String save(Context context, File file, String name) throws IOException;
+        /** Puts the finished file in shared storage and answers where it went. */
+        CallRecordings.Saved save(Context context, File file, String name) throws IOException;
+    }
+
+    interface Cleaner {
+        /** Deletes the recordings saved before [before], wall clock, and answers how many went. */
+        int clean(Context context, long before);
     }
 
     static final ArrayBlockingQueue<Block> QUEUE = new ArrayBlockingQueue<>(QUEUE_SIZE);
@@ -99,6 +114,10 @@ public final class CallRecorder {
     private static final AtomicReference<Choice> CHOICE = new AtomicReference<>();
     /** When a block of call audio last reached a hook, recorded or not. */
     private static volatile long heardAt = NEVER;
+    /** The record button's pause: the call's file stays open, and what's said meanwhile isn't in it. */
+    private static volatile boolean paused;
+    /** Samples of the call in the open file, for the record button's timer. 0 with none open. */
+    private static volatile long recorded;
 
     // Swapped by tests, which drive the writer themselves.
     static volatile boolean manual;
@@ -106,10 +125,41 @@ public final class CallRecorder {
     static LongSupplier wall = System::currentTimeMillis;
     static Outputs outputs = CallAac::new;
     static Saver saver = CallRecordings::save;
+    static Cleaner cleaner = CallRecordings::clean;
+    static BooleanSupplier opusEncoder = CallRecorder::canEncodeOpus;
+
+    /**
+     * Opus when Save recordings as Opus is on and the phone can write it, which takes Android 10
+     * and an Opus encoder. AAC otherwise, so a call is never lost to the choice.
+     */
+    static CallRecordings.Format format() {
+        if (!Settings.RECORD_CALLS_OPUS.get() || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return CallRecordings.Format.AAC;
+        return opusEncoder.getAsBoolean() ? CallRecordings.Format.OPUS : CallRecordings.Format.AAC;
+    }
+
+    private static boolean canEncodeOpus() {
+        try {
+            return new MediaCodecList(MediaCodecList.REGULAR_CODECS)
+                    .findEncoderForFormat(CallAac.encoding(CallRecordings.Format.OPUS)) != null;
+        } catch (RuntimeException unreadable) {
+            return false;
+        }
+    }
 
     /** The folder recordings go to on this phone, as a file manager shows it, for the switch's description. */
     public static String folder() {
+        return CallRecordings.shown();
+    }
+
+    /** The usual folder, where recordings go when none is picked. */
+    public static String usualFolder() {
         return CallRecordings.folder();
+    }
+
+    /** The folder picked under Recordings folder, or null for the usual one. */
+    @Nullable
+    public static Uri chosenFolder() {
+        return CallRecordings.chosen();
     }
 
     /** The newer engine's microphone block, before WebRTC takes it. [bytes] were read from the start of [buffer]. */
@@ -160,6 +210,22 @@ public final class CallRecorder {
         long heard = heardAt;
         // Mid-call the choice belongs to the audio already flowing, so it ends with that call.
         CHOICE.set(new Choice(record, heard != NEVER && now - heard < IDLE_MS ? heard : now));
+        if (!record) paused = false;
+    }
+
+    /** The record button's pause and resume. The file stays open while paused, so the call's recording goes on after. */
+    public static void pause(boolean pause) {
+        paused = pause;
+    }
+
+    /** Whether the call's recording is paused. */
+    public static boolean paused() {
+        return paused;
+    }
+
+    /** How much of the call is in its file so far, in milliseconds, for the record button's timer. */
+    public static long recordedMs() {
+        return recorded * 1000 / CallMixer.RATE;
     }
 
     /** Whether the call on screen is being recorded, as its record button shows it. */
@@ -175,7 +241,10 @@ public final class CallRecorder {
     private static boolean recording(long now) {
         Choice chosen = choice(now);
         if (chosen != null && Settings.RECORD_CALL_BUTTON.get()) return chosen.record;
-        return Settings.RECORD_CALLS.get();
+        if (!Settings.RECORD_CALLS.get()) return false;
+        String scope = RecordChats.scope();
+        // Every call needs no look at who it's with, which spares the audio threads the read.
+        return RecordChats.ALL.equals(scope) || RecordChats.wants(scope, CallPeer.at(now));
     }
 
     /** The choice still in force at [now], dropping one whose call is over. */
@@ -300,11 +369,14 @@ public final class CallRecorder {
         private boolean active;
         private boolean failed;
         private long began;
+        private CallRecordings.Format format = CallRecordings.Format.AAC;
         private long last;
         private int micSource;
         private int speakerSource;
         private long micAt;
         private long speakerAt;
+        /** Who the call is with, for the file's name, null until it's been read. */
+        @Nullable private String with;
         @Nullable private File file;
         @Nullable private Output output;
         @Nullable private CallMixer mixer;
@@ -323,12 +395,16 @@ public final class CallRecorder {
             if (!active) begin(block.at);
             last = Math.max(last, block.at);
             if (failed || !follows(block)) return;
+            if (with == null) with = CallPeer.at(block.at).name;
+            // Paused, the block still keeps the call open. It just isn't mixed in.
+            if (paused) return;
             try {
                 if (block.mic()) {
                     mixer.mic(block.pcm, block.pcm.length, block.rate, block.channels);
                 } else {
                     mixer.speaker(block.pcm, block.pcm.length, block.rate, block.channels);
                 }
+                recorded = mixer.written();
             } catch (Throwable failure) {
                 fail("call recording encode", failure);
             }
@@ -355,12 +431,15 @@ public final class CallRecorder {
             last = at;
             micSource = -1;
             speakerSource = -1;
+            with = null;
+            recorded = 0;
             began = wall.getAsLong();
             try {
                 Context context = Utils.getContext();
                 if (context == null) throw new IOException("No context to record the call in");
                 file = CallRecordings.scratch(context, began);
-                Output opened = outputs.open(file);
+                format = format();
+                Output opened = outputs.open(file, format);
                 output = opened;
                 mixer = new CallMixer(opened);
             } catch (Throwable failure) {
@@ -386,6 +465,8 @@ public final class CallRecorder {
 
         private void end() {
             active = false;
+            paused = false;
+            recorded = 0;
             if (failed || output == null || mixer == null) {
                 drop();
                 HookStatus.counted(FAMILY, FAILED);
@@ -406,9 +487,12 @@ public final class CallRecorder {
                 finished = open.finish();
                 Context context = Utils.getContext();
                 if (context == null) throw new IOException("No context to save the call in");
-                String folder = saver.save(context, finished, CallRecordings.name(began));
+                String name = CallRecordings.name(began, with, format);
+                CallRecordings.Saved saved = saver.save(context, finished, name);
                 HookStatus.counted(FAMILY, SAVED);
-                Utils.showToastShort(L10n.f("Call saved to %1$s", L10n.isolate(folder)));
+                Utils.showToastShort(L10n.f("Call saved to %1$s", L10n.isolate(saved.folder)));
+                notice(context, saved, name);
+                clean(context);
             } catch (Throwable failure) {
                 HookStatus.threw(FAMILY, "call recording save", failure);
                 drop();
@@ -420,11 +504,33 @@ public final class CallRecorder {
             }
         }
 
+        /** The notification for a saved recording. The recording stays saved whatever happens here. */
+        private void notice(Context context, CallRecordings.Saved saved, String name) {
+            try {
+                CallSavedNotice.show(context, saved.uri, name, saved.mime);
+            } catch (Throwable failure) {
+                HookStatus.threw(FAMILY, "call saved notification", failure);
+            }
+        }
+
+        /** Once a recording is saved, the ones older than Keep recordings allows go. */
+        private void clean(Context context) {
+            try {
+                int days = Settings.RECORD_CALLS_KEEP_DAYS.get();
+                if (days <= 0) return;
+                int deleted = cleaner.clean(context, wall.getAsLong() - days * DAY_MS);
+                for (int i = 0; i < deleted; i++) HookStatus.counted(FAMILY, CLEANED);
+            } catch (Throwable failure) {
+                HookStatus.threw(FAMILY, "old call recordings cleanup", failure);
+            }
+        }
+
         /** Drops whatever call is open, for a test's clean start. */
         void reset() {
             drop();
             active = false;
             failed = false;
+            with = null;
         }
     }
 
@@ -439,5 +545,8 @@ public final class CallRecorder {
         WRITER.reset();
         CHOICE.set(null);
         heardAt = NEVER;
+        paused = false;
+        recorded = 0;
+        CallPeer.forget();
     }
 }
